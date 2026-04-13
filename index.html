@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vital Chat Health | Intelligent Clinic & Hospital Finder</title>
+    <script type="module" src="js/firebase.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/map-footer.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="navbar">
+        <div class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </div>
+        <nav class="nav-links">
+            <a href="index.html" class="active">Home</a>
+            <a href="clinics.html">Find Clinics</a>
+            <a href="appointment.html">Book Care</a>
+        </nav>
+        <div class="nav-actions" id="home-nav-actions">
+            <a href="login.html" class="btn-outline">Sign In</a>
+            <a href="register.html" class="btn-primary">Register</a>
+            <div class="menu-toggle" id="mobile-menu">
+                <i class='bx bx-menu'></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero-section">
+        <!-- Interactive Background Layer -->
+        <div class="interactive-bg">
+            <!-- Particle Canvas -->
+            <canvas id="particles-canvas"></canvas>
+            
+            <!-- Hex Grid Pattern -->
+            <div class="hex-grid"></div>
+
+            <!-- Floating Orbs -->
+            <div class="floating-orb orb-1"></div>
+            <div class="floating-orb orb-2"></div>
+            <div class="floating-orb orb-3"></div>
+            <div class="floating-orb orb-4"></div>
+            <div class="floating-orb orb-5"></div>
+
+            <!-- Geometric Shapes -->
+            <div class="geo-shape circle"></div>
+            <div class="geo-shape square"></div>
+            <div class="geo-shape triangle"></div>
+            <div class="geo-shape diamond"></div>
+            <div class="geo-shape ring"></div>
+        </div>
+
+        <div class="hero-bg-shapes">
+            <div class="shape blob-1"></div>
+            <div class="shape blob-2"></div>
+        </div>
+
+        <div class="hero-content">
+            <span class="badge"><i class='bx bx-chip'></i> AI-Powered Health Platform</span>
+            <h1>Discover <span class="highlight">Exceptional Care</span> <br>Nearest To You</h1>
+            <p>Describe your symptoms to our intelligent AI, or seamlessly search for top-rated local clinics and hospitals and book instantly.</p>
+            
+            <div class="search-bar-wrapper">
+                <form class="hero-search" action="clinics.html" method="GET">
+                    <div class="search-input">
+                        <i class='bx bx-search'></i>
+                        <input type="text" placeholder="Specialty e.g. 'Cardiologist' or 'Dental'" name="query">
+                    </div>
+                    <div class="search-input location-input">
+                        <i class='bx bx-map'></i>
+                        <input type="text" placeholder="Your location" name="location">
+                        <button type="button" class="geo-btn" title="Use my location"><i class='bx bx-current-location'></i></button>
+                    </div>
+                    <button type="submit" class="btn-primary search-btn">Search</button>
+                </form>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat"><span class="number">1K+</span><span class="label">Clinics</span></div>
+                <div class="stat"><span class="number">24/7</span><span class="label">AI Assistant</span></div>
+                <div class="stat"><span class="number">50K+</span><span class="label">Patients</span></div>
+            </div>
+        </div>
+        
+        <div class="hero-image">
+            <div class="glass-card mockup-card">
+                <div class="mockup-header">
+                    <img src="https://ui-avatars.com/api/?name=AI&background=2563eb&color=fff&rounded=true" alt="AI Avatar" class="ai-avatar">
+                    <div class="mockup-title">
+                        <h4>Vital Chat AI</h4>
+                        <span>Online Now</span>
+                    </div>
+                </div>
+                <div class="mockup-chat">
+                    <div class="msg bot">Hi! What are your symptoms today?</div>
+                    <div class="msg user">I have a fever and sore throat.</div>
+                    <div class="msg bot typing">Finding nearest clinics...</div>
+                </div>
+                <a href="chatbot.html" class="btn-glow">Open AI Assistant</a>
+            </div>
+        </div>
+
+        <!-- Wave Divider at bottom of hero -->
+        <div class="wave-divider">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6.01,67.49-21.34,101.15-31.64,31.33-9.59,67.17-14.74,100.59-8.88,25.53,4.48,49.81,14.7,75.14,20.91V0Z" class="shape-fill" opacity=".25"></path>
+                <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" class="shape-fill" opacity=".5"></path>
+                <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,googl172.46-45.71,248.8-84.81V0Z" class="shape-fill"></path>
+            </svg>
+        </div>
+
+        <!-- Scroll Indicator -->
+        <div class="scroll-indicator">
+            <span>Scroll</span>
+            <i class='bx bx-chevron-down'></i>
+        </div>
+    </section>
+
+    <!-- Mouse Glow Effect -->
+    <div class="mouse-glow" id="mouse-glow"></div>
+
+    <!-- Floating Chatbot Widget -->
+    <div class="chatbot-widget" id="chatbot-widget">
+        <button class="chatbot-trigger" id="chatbot-trigger">
+            <i class='bx bx-bot'></i>
+        </button>
+        <div class="chatbot-window" id="chatbot-window">
+            <div class="chatbot-header">
+                <div class="header-info">
+                    <div class="status-dot"></div>
+                    <h3>Care Assistant AI</h3>
+                </div>
+                <button id="chatbot-close"><i class='bx bx-x'></i></button>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="message bot">
+                    <p>Hello! I am your Vital Chat medical assistant. Please describe your symptoms or tell me what kind of specialist you're looking for!</p>
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" placeholder="Type your symptoms..." id="chat-input-field">
+                <button id="chat-send-btn"><i class='bx bx-send'></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section placeholder -->
+    <section class="features">
+        <div class="feature-card">
+            <i class='bx bx-heart-circle'></i>
+            <h3>Smart Symptom Match</h3>
+            <p>Our AI analyzes symptoms to find the ideal specialty.</p>
+        </div>
+        <div class="feature-card">
+            <i class='bx bx-calendar-check'></i>
+            <h3>Instant Booking</h3>
+            <p>See real-time availability and confirm your slot instantly.</p>
+        </div>
+        <div class="feature-card">
+            <i class='bx bx-map-alt'></i>
+            <h3>Location Based</h3>
+            <p>Integrated with Google Maps to find the absolute nearest care.</p>
+        </div>
+    </section>
+
+    <!-- Featured Care Section -->
+    <section class="map-section">
+        <div class="section-header">
+            <h2>Featured Care in <span class="highlight">Jaipur</span></h2>
+            <p>Browse trusted nearby hospitals and clinics selected from our shared care directory.</p>
+        </div>
+        <div class="featured-care-shell">
+            <div class="featured-care-intro">
+                <span class="mini-badge"><i class='bx bx-shield-quarter'></i> Verified directory highlights</span>
+                <h3>Top-rated options patients can discover instantly</h3>
+                <p>
+                    Instead of showing an empty map, this section now highlights real care providers from your project data.
+                    It gives visitors a quick view of ratings, availability, and specialties before they open the assistant
+                    or continue to booking.
+                </p>
+                <a href="clinics.html" class="btn-primary">Explore All Clinics</a>
+            </div>
+            <div class="featured-care-grid" id="featured-care-grid"></div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class='bx bx-pulse'></i> Vital Chat</div>
+            <p>Empowering patients with intelligent healthcare solutions.</p>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Vital Chat Health. Devloped by Akarsh, Hemant & Team</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/chatbot.js"></script>
+    <script type="module" src="js/home-auth.js"></script>
+    <script type="module" src="js/home-highlights.js"></script>
+    <script src="js/interactive-bg.js"></script>
+</body>
+</html>

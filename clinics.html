@@ -1,0 +1,943 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Clinics - vital Chat Health</title>
+    <meta name="description" content="Search symptoms, identify conditions, and find the right clinic near you. AI-powered health symptom checker by Vital Chat.">
+    <script type="module" src="js/firebase.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/clinics.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="clinics.html" class="active">Find Clinics</a>
+            <a href="appointment.html">Book Care</a>
+        </nav>
+        <div class="nav-actions">
+            <a onclick="logoutUser()" href="#" class="logout-btn" style="color:#ef4444; font-weight: 600;"><i class='bx bx-log-out'></i> Sign Out</a>
+        </div>
+    </header>
+
+    <!-- Glass Hero Banner -->
+    <section class="clinics-hero">
+        <div class="clinics-hero-bg">
+            <div class="hero-blob hero-blob-1"></div>
+            <div class="hero-blob hero-blob-2"></div>
+            <div class="hero-blob hero-blob-3"></div>
+        </div>
+        <div class="clinics-hero-content">
+            <div class="glass-card clinics-banner">
+                <div class="banner-icon-wrap">
+                    <i class='bx bx-search-alt-2'></i>
+                </div>
+                <div class="banner-text">
+                    <span class="banner-badge">AI Symptom Checker</span>
+                    <h1>Find The Right <span class="highlight">Care</span> For You</h1>
+                    <p>Browse common conditions below, check your symptoms, and we'll guide you to the best specialist near you.</p>
+                </div>
+                <div class="banner-search">
+                    <div class="symptom-search-bar">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="disease-search" placeholder="Search diseases or symptoms..." autocomplete="off">
+                        <button class="search-clear-btn" id="search-clear" title="Clear search"><i class='bx bx-x'></i></button>
+                    </div>
+                </div>
+                <div class="banner-stats-row">
+                    <div class="banner-stat">
+                        <i class='bx bx-virus'></i>
+                        <span>35 Conditions</span>
+                    </div>
+                    <div class="banner-stat">
+                        <i class='bx bx-body'></i>
+                        <span>200+ Symptoms</span>
+                    </div>
+                    <div class="banner-stat">
+                        <i class='bx bx-check-shield'></i>
+                        <span>Verified Info</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Disease Cards Section -->
+    <section class="diseases-section">
+        <div class="section-header">
+            <h2>Common <span class="highlight">Conditions</span> & Symptoms</h2>
+            <p>Click on any condition to learn about its symptoms. Use this as a guide - always consult a doctor for diagnosis.</p>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="category-tabs">
+            <button class="cat-tab active" data-category="all"><i class='bx bx-grid-alt'></i> All</button>
+            <button class="cat-tab" data-category="infectious"><i class='bx bx-virus'></i> Infectious</button>
+            <button class="cat-tab" data-category="chronic"><i class='bx bx-heart'></i> Chronic</button>
+            <button class="cat-tab" data-category="respiratory"><i class='bx bx-wind'></i> Respiratory</button>
+            <button class="cat-tab" data-category="other"><i class='bx bx-plus-medical'></i> Other</button>
+        </div>
+
+        <div class="disease-grid" id="disease-grid">
+
+            <!-- 1. Common Cold -->
+            <div class="disease-card" data-category="infectious" data-keywords="common cold runny nose sneezing sore throat mild fever cough headache">
+                <div class="disease-card-accent" style="--card-accent: #60a5fa;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(96,165,250,0.15); --icon-color: #3b82f6;">
+                    <i class='bx bx-wind'></i>
+                </div>
+                <h3>Common Cold</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Runny nose</span>
+                    <span class="symptom-tag">Sneezing</span>
+                    <span class="symptom-tag">Sore throat</span>
+                    <span class="symptom-tag">Mild fever</span>
+                    <span class="symptom-tag">Cough</span>
+                    <span class="symptom-tag">Headache</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 2. Influenza -->
+            <div class="disease-card" data-category="infectious" data-keywords="influenza flu high fever body aches chills fatigue dry cough sore throat">
+                <div class="disease-card-accent" style="--card-accent: #f97316;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(249,115,22,0.15); --icon-color: #ea580c;">
+                    <i class='bx bx-thermometer'></i>
+                </div>
+                <h3>Influenza</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">High fever</span>
+                    <span class="symptom-tag">Body aches</span>
+                    <span class="symptom-tag">Chills</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Dry cough</span>
+                    <span class="symptom-tag">Sore throat</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 3. Dengue Fever -->
+            <div class="disease-card" data-category="infectious" data-keywords="dengue fever severe headache pain behind eyes joint muscle pain rash nausea">
+                <div class="disease-card-accent" style="--card-accent: #ef4444;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(239,68,68,0.15); --icon-color: #dc2626;">
+                    <i class='bx bx-bug'></i>
+                </div>
+                <h3>Dengue Fever</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">High fever</span>
+                    <span class="symptom-tag">Severe headache</span>
+                    <span class="symptom-tag">Pain behind eyes</span>
+                    <span class="symptom-tag">Joint & muscle pain</span>
+                    <span class="symptom-tag">Rash</span>
+                    <span class="symptom-tag">Nausea</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 4. Malaria -->
+            <div class="disease-card" data-category="infectious" data-keywords="malaria fever chills sweating headache nausea vomiting fatigue">
+                <div class="disease-card-accent" style="--card-accent: #a855f7;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(168,85,247,0.15); --icon-color: #9333ea;">
+                    <i class='bx bx-droplet'></i>
+                </div>
+                <h3>Malaria</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Fever with chills</span>
+                    <span class="symptom-tag">Sweating</span>
+                    <span class="symptom-tag">Headache</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Fatigue</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 5. Typhoid Fever -->
+            <div class="disease-card" data-category="infectious" data-keywords="typhoid fever persistent high fever weakness stomach pain headache loss appetite diarrhea constipation">
+                <div class="disease-card-accent" style="--card-accent: #14b8a6;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(20,184,166,0.15); --icon-color: #0d9488;">
+                    <i class='bx bx-test-tube'></i>
+                </div>
+                <h3>Typhoid Fever</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Persistent high fever</span>
+                    <span class="symptom-tag">Weakness</span>
+                    <span class="symptom-tag">Stomach pain</span>
+                    <span class="symptom-tag">Headache</span>
+                    <span class="symptom-tag">Loss of appetite</span>
+                    <span class="symptom-tag">Diarrhea / Constipation</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 6. Diabetes -->
+            <div class="disease-card" data-category="chronic" data-keywords="diabetes frequent urination increased thirst hunger fatigue blurred vision">
+                <div class="disease-card-accent" style="--card-accent: #f59e0b;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(245,158,11,0.15); --icon-color: #d97706;">
+                    <i class='bx bx-injection'></i>
+                </div>
+                <h3>Diabetes</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Frequent urination</span>
+                    <span class="symptom-tag">Increased thirst</span>
+                    <span class="symptom-tag">Increased hunger</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Blurred vision</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 7. Hypertension -->
+            <div class="disease-card" data-category="chronic" data-keywords="hypertension blood pressure headache dizziness nosebleeds shortness breath">
+                <div class="disease-card-accent" style="--card-accent: #e11d48;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(225,29,72,0.15); --icon-color: #be123c;">
+                    <i class='bx bx-heart'></i>
+                </div>
+                <h3>Hypertension</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Often no symptoms</span>
+                    <span class="symptom-tag">Headache</span>
+                    <span class="symptom-tag">Dizziness</span>
+                    <span class="symptom-tag">Nosebleeds</span>
+                    <span class="symptom-tag">Shortness of breath</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 8. Asthma -->
+            <div class="disease-card" data-category="respiratory" data-keywords="asthma shortness breath wheezing chest tightness coughing night">
+                <div class="disease-card-accent" style="--card-accent: #06b6d4;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(6,182,212,0.15); --icon-color: #0891b2;">
+                    <i class='bx bxs-cloud'></i>
+                </div>
+                <h3>Asthma</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Shortness of breath</span>
+                    <span class="symptom-tag">Wheezing</span>
+                    <span class="symptom-tag">Chest tightness</span>
+                    <span class="symptom-tag">Coughing (night)</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 9. Tuberculosis -->
+            <div class="disease-card" data-category="respiratory" data-keywords="tuberculosis tb persistent cough chest pain coughing blood fever night sweats weight loss">
+                <div class="disease-card-accent" style="--card-accent: #78716c;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(120,113,108,0.15); --icon-color: #57534e;">
+                    <i class='bx bxs-virus'></i>
+                </div>
+                <h3>Tuberculosis</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Persistent cough</span>
+                    <span class="symptom-tag">Chest pain</span>
+                    <span class="symptom-tag">Coughing blood</span>
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Night sweats</span>
+                    <span class="symptom-tag">Weight loss</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 10. COVID-19 -->
+            <div class="disease-card" data-category="respiratory" data-keywords="covid 19 coronavirus fever cough tiredness loss taste smell breathing difficulty">
+                <div class="disease-card-accent" style="--card-accent: #6366f1;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(99,102,241,0.15); --icon-color: #4f46e5;">
+                    <i class='bx bx-shield-quarter'></i>
+                </div>
+                <h3>COVID-19</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Cough</span>
+                    <span class="symptom-tag">Tiredness</span>
+                    <span class="symptom-tag">Loss of taste/smell</span>
+                    <span class="symptom-tag">Breathing difficulty</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 11. Migraine -->
+            <div class="disease-card" data-category="other" data-keywords="migraine severe headache nausea vomiting sensitivity light sound">
+                <div class="disease-card-accent" style="--card-accent: #ec4899;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(236,72,153,0.15); --icon-color: #db2777;">
+                    <i class='bx bx-brain'></i>
+                </div>
+                <h3>Migraine</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Severe headache</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Sensitivity to light</span>
+                    <span class="symptom-tag">Sensitivity to sound</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 12. Food Poisoning -->
+            <div class="disease-card" data-category="other" data-keywords="food poisoning nausea vomiting diarrhea stomach cramps fever">
+                <div class="disease-card-accent" style="--card-accent: #84cc16;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(132,204,22,0.15); --icon-color: #65a30d;">
+                    <i class='bx bx-dish'></i>
+                </div>
+                <h3>Food Poisoning</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Diarrhea</span>
+                    <span class="symptom-tag">Stomach cramps</span>
+                    <span class="symptom-tag">Fever</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 13. Chickenpox -->
+            <div class="disease-card" data-category="infectious" data-keywords="chickenpox itchy rash fever fatigue loss appetite headache">
+                <div class="disease-card-accent" style="--card-accent: #f472b6;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(244,114,182,0.15); --icon-color: #ec4899;">
+                    <i class='bx bx-body'></i>
+                </div>
+                <h3>Chickenpox</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Itchy rash</span>
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Loss of appetite</span>
+                    <span class="symptom-tag">Headache</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 14. Pneumonia -->
+            <div class="disease-card" data-category="respiratory" data-keywords="pneumonia chest pain cough mucus fever chills difficulty breathing">
+                <div class="disease-card-accent" style="--card-accent: #0ea5e9;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(14,165,233,0.15); --icon-color: #0284c7;">
+                    <i class='bx bxs-blanket'></i>
+                </div>
+                <h3>Pneumonia</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Chest pain</span>
+                    <span class="symptom-tag">Cough with mucus</span>
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Chills</span>
+                    <span class="symptom-tag">Difficulty breathing</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 15. Jaundice -->
+            <div class="disease-card" data-category="other" data-keywords="jaundice yellow skin eyes dark urine fatigue abdominal pain">
+                <div class="disease-card-accent" style="--card-accent: #eab308;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(234,179,8,0.15); --icon-color: #ca8a04;">
+                    <i class='bx bx-donate-blood'></i>
+                </div>
+                <h3>Jaundice</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Yellow skin & eyes</span>
+                    <span class="symptom-tag">Dark urine</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Abdominal pain</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 16. Anemia -->
+            <div class="disease-card" data-category="chronic" data-keywords="anemia anaemia pale skin fatigue weakness dizziness cold hands feet shortness breath chest pain">
+                <div class="disease-card-accent" style="--card-accent: #f87171;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(248,113,113,0.15); --icon-color: #ef4444;">
+                    <i class='bx bx-donate-blood'></i>
+                </div>
+                <h3>Anemia</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Pale skin</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Weakness</span>
+                    <span class="symptom-tag">Dizziness</span>
+                    <span class="symptom-tag">Cold hands & feet</span>
+                    <span class="symptom-tag">Shortness of breath</span>
+                    <span class="symptom-tag">Chest pain</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 17. GERD / Acid Reflux -->
+            <div class="disease-card" data-category="other" data-keywords="gerd acid reflux gastritis heartburn chest pain difficulty swallowing regurgitation bloating nausea">
+                <div class="disease-card-accent" style="--card-accent: #fb923c;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(251,146,60,0.15); --icon-color: #ea580c;">
+                    <i class='bx bx-bowl-hot'></i>
+                </div>
+                <h3>GERD / Acid Reflux</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Heartburn</span>
+                    <span class="symptom-tag">Chest pain</span>
+                    <span class="symptom-tag">Difficulty swallowing</span>
+                    <span class="symptom-tag">Regurgitation</span>
+                    <span class="symptom-tag">Bloating</span>
+                    <span class="symptom-tag">Nausea</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 18. Urinary Tract Infection -->
+            <div class="disease-card" data-category="infectious" data-keywords="uti urinary tract infection burning urination frequent urge cloudy urine pelvic pain blood urine strong smell">
+                <div class="disease-card-accent" style="--card-accent: #38bdf8;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(56,189,248,0.15); --icon-color: #0284c7;">
+                    <i class='bx bx-water'></i>
+                </div>
+                <h3>Urinary Tract Infection</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Burning urination</span>
+                    <span class="symptom-tag">Frequent urge to urinate</span>
+                    <span class="symptom-tag">Cloudy urine</span>
+                    <span class="symptom-tag">Pelvic pain</span>
+                    <span class="symptom-tag">Blood in urine</span>
+                    <span class="symptom-tag">Strong-smelling urine</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 19. Kidney Stones -->
+            <div class="disease-card" data-category="other" data-keywords="kidney stones severe pain back side groin nausea vomiting blood urine painful urination">
+                <div class="disease-card-accent" style="--card-accent: #a78bfa;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(167,139,250,0.15); --icon-color: #7c3aed;">
+                    <i class='bx bxs-kidney'></i>
+                </div>
+                <h3>Kidney Stones</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Severe back/side pain</span>
+                    <span class="symptom-tag">Pain radiating to groin</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Blood in urine</span>
+                    <span class="symptom-tag">Painful urination</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 20. Hepatitis -->
+            <div class="disease-card" data-category="infectious" data-keywords="hepatitis liver fatigue nausea vomiting abdominal pain dark urine jaundice joint pain loss appetite">
+                <div class="disease-card-accent" style="--card-accent: #fbbf24;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(251,191,36,0.15); --icon-color: #d97706;">
+                    <i class='bx bxs-vial'></i>
+                </div>
+                <h3>Hepatitis</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Nausea & vomiting</span>
+                    <span class="symptom-tag">Abdominal pain</span>
+                    <span class="symptom-tag">Dark urine</span>
+                    <span class="symptom-tag">Jaundice</span>
+                    <span class="symptom-tag">Joint pain</span>
+                    <span class="symptom-tag">Loss of appetite</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 21. Arthritis -->
+            <div class="disease-card" data-category="chronic" data-keywords="arthritis joint pain swelling stiffness reduced range motion redness warmth">
+                <div class="disease-card-accent" style="--card-accent: #94a3b8;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(148,163,184,0.15); --icon-color: #64748b;">
+                    <i class='bx bx-bone'></i>
+                </div>
+                <h3>Arthritis</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Joint pain</span>
+                    <span class="symptom-tag">Swelling</span>
+                    <span class="symptom-tag">Stiffness</span>
+                    <span class="symptom-tag">Reduced range of motion</span>
+                    <span class="symptom-tag">Redness around joints</span>
+                    <span class="symptom-tag">Warmth in joints</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 22. Thyroid Disorders -->
+            <div class="disease-card" data-category="chronic" data-keywords="thyroid hypothyroidism hyperthyroidism weight gain weight loss fatigue sensitivity cold heat hair loss dry skin rapid heartbeat">
+                <div class="disease-card-accent" style="--card-accent: #c084fc;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(192,132,252,0.15); --icon-color: #9333ea;">
+                    <i class='bx bx-trending-up'></i>
+                </div>
+                <h3>Thyroid Disorders</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Weight gain / loss</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Sensitivity to cold/heat</span>
+                    <span class="symptom-tag">Hair loss</span>
+                    <span class="symptom-tag">Dry skin</span>
+                    <span class="symptom-tag">Rapid heartbeat</span>
+                    <span class="symptom-tag">Mood changes</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 23. Bronchitis -->
+            <div class="disease-card" data-category="respiratory" data-keywords="bronchitis cough mucus phlegm chest discomfort fatigue shortness breath mild fever chills">
+                <div class="disease-card-accent" style="--card-accent: #2dd4bf;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(45,212,191,0.15); --icon-color: #0d9488;">
+                    <i class='bx bxs-cloud'></i>
+                </div>
+                <h3>Bronchitis</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Persistent cough</span>
+                    <span class="symptom-tag">Mucus production</span>
+                    <span class="symptom-tag">Chest discomfort</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Shortness of breath</span>
+                    <span class="symptom-tag">Mild fever & chills</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 24. Sinusitis -->
+            <div class="disease-card" data-category="respiratory" data-keywords="sinusitis sinus infection nasal congestion facial pain pressure headache thick nasal discharge reduced smell cough">
+                <div class="disease-card-accent" style="--card-accent: #67e8f9;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(103,232,249,0.15); --icon-color: #06b6d4;">
+                    <i class='bx bxs-face-mask'></i>
+                </div>
+                <h3>Sinusitis</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Nasal congestion</span>
+                    <span class="symptom-tag">Facial pain/pressure</span>
+                    <span class="symptom-tag">Headache</span>
+                    <span class="symptom-tag">Thick nasal discharge</span>
+                    <span class="symptom-tag">Reduced sense of smell</span>
+                    <span class="symptom-tag">Cough</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 25. Conjunctivitis -->
+            <div class="disease-card" data-category="infectious" data-keywords="conjunctivitis pink eye redness itching tearing discharge crusting swollen eyelids">
+                <div class="disease-card-accent" style="--card-accent: #fb7185;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(251,113,133,0.15); --icon-color: #e11d48;">
+                    <i class='bx bx-show'></i>
+                </div>
+                <h3>Conjunctivitis (Pink Eye)</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Redness in eyes</span>
+                    <span class="symptom-tag">Itching</span>
+                    <span class="symptom-tag">Tearing</span>
+                    <span class="symptom-tag">Discharge from eyes</span>
+                    <span class="symptom-tag">Crusting of eyelids</span>
+                    <span class="symptom-tag">Swollen eyelids</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 26. Appendicitis -->
+            <div class="disease-card" data-category="other" data-keywords="appendicitis sudden pain abdomen right side nausea vomiting loss appetite fever swelling">
+                <div class="disease-card-accent" style="--card-accent: #f43f5e;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(244,63,94,0.15); --icon-color: #e11d48;">
+                    <i class='bx bx-target-lock'></i>
+                </div>
+                <h3>Appendicitis</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Sudden abdominal pain</span>
+                    <span class="symptom-tag">Pain shifting to lower right</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Loss of appetite</span>
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Abdominal swelling</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 27. Measles -->
+            <div class="disease-card" data-category="infectious" data-keywords="measles high fever cough runny nose red eyes skin rash koplik spots">
+                <div class="disease-card-accent" style="--card-accent: #e879f9;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(232,121,249,0.15); --icon-color: #c026d3;">
+                    <i class='bx bx-body'></i>
+                </div>
+                <h3>Measles</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">High fever</span>
+                    <span class="symptom-tag">Cough</span>
+                    <span class="symptom-tag">Runny nose</span>
+                    <span class="symptom-tag">Red, watery eyes</span>
+                    <span class="symptom-tag">Skin rash</span>
+                    <span class="symptom-tag">Koplik's spots</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 28. Cholera -->
+            <div class="disease-card" data-category="infectious" data-keywords="cholera severe diarrhea dehydration vomiting leg cramps rapid heart rate dry mouth thirst">
+                <div class="disease-card-accent" style="--card-accent: #22d3ee;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(34,211,238,0.15); --icon-color: #0891b2;">
+                    <i class='bx bx-water'></i>
+                </div>
+                <h3>Cholera</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Severe watery diarrhea</span>
+                    <span class="symptom-tag">Dehydration</span>
+                    <span class="symptom-tag">Vomiting</span>
+                    <span class="symptom-tag">Leg cramps</span>
+                    <span class="symptom-tag">Rapid heart rate</span>
+                    <span class="symptom-tag">Dry mouth & thirst</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 29. Epilepsy -->
+            <div class="disease-card" data-category="chronic" data-keywords="epilepsy seizures convulsions staring spells confusion temporary loss awareness uncontrollable jerking">
+                <div class="disease-card-accent" style="--card-accent: #818cf8;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(129,140,248,0.15); --icon-color: #4f46e5;">
+                    <i class='bx bx-pulse'></i>
+                </div>
+                <h3>Epilepsy</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Seizures</span>
+                    <span class="symptom-tag">Convulsions</span>
+                    <span class="symptom-tag">Staring spells</span>
+                    <span class="symptom-tag">Temporary confusion</span>
+                    <span class="symptom-tag">Loss of awareness</span>
+                    <span class="symptom-tag">Uncontrollable jerking</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 30. Depression -->
+            <div class="disease-card" data-category="chronic" data-keywords="depression persistent sadness loss interest fatigue sleep changes appetite changes difficulty concentrating hopelessness anxiety">
+                <div class="disease-card-accent" style="--card-accent: #a3a3a3;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(163,163,163,0.15); --icon-color: #525252;">
+                    <i class='bx bx-sad'></i>
+                </div>
+                <h3>Depression</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Persistent sadness</span>
+                    <span class="symptom-tag">Loss of interest</span>
+                    <span class="symptom-tag">Fatigue</span>
+                    <span class="symptom-tag">Sleep changes</span>
+                    <span class="symptom-tag">Appetite changes</span>
+                    <span class="symptom-tag">Difficulty concentrating</span>
+                    <span class="symptom-tag">Hopelessness</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 31. Allergic Rhinitis -->
+            <div class="disease-card" data-category="respiratory" data-keywords="allergic rhinitis hay fever sneezing runny nose stuffy nose itchy eyes nose throat watery eyes">
+                <div class="disease-card-accent" style="--card-accent: #86efac;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(134,239,172,0.15); --icon-color: #16a34a;">
+                    <i class='bx bx-leaf'></i>
+                </div>
+                <h3>Allergic Rhinitis</h3>
+                <span class="disease-type">Respiratory</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Sneezing</span>
+                    <span class="symptom-tag">Runny nose</span>
+                    <span class="symptom-tag">Stuffy nose</span>
+                    <span class="symptom-tag">Itchy eyes, nose & throat</span>
+                    <span class="symptom-tag">Watery eyes</span>
+                    <span class="symptom-tag">Postnasal drip</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 32. Eczema / Dermatitis -->
+            <div class="disease-card" data-category="chronic" data-keywords="eczema dermatitis dry skin itching red patches rash cracked skin blisters thickened skin">
+                <div class="disease-card-accent" style="--card-accent: #fca5a5;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(252,165,165,0.15); --icon-color: #dc2626;">
+                    <i class='bx bx-band-aid'></i>
+                </div>
+                <h3>Eczema / Dermatitis</h3>
+                <span class="disease-type">Chronic</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Dry skin</span>
+                    <span class="symptom-tag">Intense itching</span>
+                    <span class="symptom-tag">Red, inflamed patches</span>
+                    <span class="symptom-tag">Cracked skin</span>
+                    <span class="symptom-tag">Blisters</span>
+                    <span class="symptom-tag">Thickened skin</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 33. Heart Attack -->
+            <div class="disease-card" data-category="other" data-keywords="heart attack myocardial infarction chest pain pressure squeezing arm pain jaw pain shortness breath cold sweat nausea lightheadedness">
+                <div class="disease-card-accent" style="--card-accent: #dc2626;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(220,38,38,0.15); --icon-color: #b91c1c;">
+                    <i class='bx bxs-heart'></i>
+                </div>
+                <h3>Heart Attack</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Chest pain / pressure</span>
+                    <span class="symptom-tag">Pain in arm / jaw</span>
+                    <span class="symptom-tag">Shortness of breath</span>
+                    <span class="symptom-tag">Cold sweat</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Lightheadedness</span>
+                    <span class="symptom-tag">Fatigue</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 34. Stroke -->
+            <div class="disease-card" data-category="other" data-keywords="stroke sudden numbness face arm leg confusion trouble speaking severe headache vision problems difficulty walking">
+                <div class="disease-card-accent" style="--card-accent: #7c3aed;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(124,58,237,0.15); --icon-color: #6d28d9;">
+                    <i class='bx bx-brain'></i>
+                </div>
+                <h3>Stroke</h3>
+                <span class="disease-type">Other</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Sudden numbness (face/arm/leg)</span>
+                    <span class="symptom-tag">Confusion</span>
+                    <span class="symptom-tag">Trouble speaking</span>
+                    <span class="symptom-tag">Severe headache</span>
+                    <span class="symptom-tag">Vision problems</span>
+                    <span class="symptom-tag">Difficulty walking</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+            <!-- 35. Diarrheal Disease -->
+            <div class="disease-card" data-category="infectious" data-keywords="diarrheal disease loose stools watery diarrhea stomach cramps bloating nausea fever dehydration urgency">
+                <div class="disease-card-accent" style="--card-accent: #4ade80;"></div>
+                <div class="disease-icon" style="--icon-bg: rgba(74,222,128,0.15); --icon-color: #16a34a;">
+                    <i class='bx bx-plus-medical'></i>
+                </div>
+                <h3>Diarrheal Disease</h3>
+                <span class="disease-type">Infectious</span>
+                <div class="symptoms-list">
+                    <span class="symptom-tag">Loose/watery stools</span>
+                    <span class="symptom-tag">Stomach cramps</span>
+                    <span class="symptom-tag">Bloating</span>
+                    <span class="symptom-tag">Nausea</span>
+                    <span class="symptom-tag">Fever</span>
+                    <span class="symptom-tag">Dehydration</span>
+                    <span class="symptom-tag">Urgency</span>
+                </div>
+                <div class="card-footer">
+                    <a href="appointment.html" class="card-action-btn"><i class='bx bx-calendar-plus'></i> Book Consultation</a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- No Results Message -->
+        <div class="no-results" id="no-results" style="display: none;">
+            <i class='bx bx-search-alt'></i>
+            <h3>No conditions found</h3>
+            <p>Try searching with different keywords or symptoms.</p>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
+    <section class="disclaimer-section">
+        <div class="glass-card disclaimer-card">
+            <i class='bx bx-info-circle'></i>
+            <div>
+                <h4>Medical Disclaimer</h4>
+                <p>This information is for educational purposes only and is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other qualified health provider.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class='bx bx-pulse'></i> Vital Chat
+            </div>
+            <p>Empowering patients with intelligent healthcare solutions.</p>
+            <div class="social-links">
+                <a href="#"><i class='bx bxl-twitter'></i></a>
+                <a href="#"><i class='bx bxl-linkedin'></i></a>
+                <a href="#"><i class='bx bxl-github'></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Vital Chat Health. Developed by Akarsh Singh , Hemant Kumar Sahu , Aditi Jain , Arnav Soni</p>
+        </div>
+    </footer>
+
+    <script>
+    // ===== Search Functionality =====
+    const searchInput = document.getElementById('disease-search');
+    const searchClear = document.getElementById('search-clear');
+    const diseaseGrid = document.getElementById('disease-grid');
+    const noResults = document.getElementById('no-results');
+    const cards = document.querySelectorAll('.disease-card');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        searchClear.style.opacity = query.length > 0 ? '1' : '0';
+        searchClear.style.pointerEvents = query.length > 0 ? 'auto' : 'none';
+        filterCards(query, getActiveCategory());
+    });
+
+    searchClear.addEventListener('click', function() {
+        searchInput.value = '';
+        this.style.opacity = '0';
+        this.style.pointerEvents = 'none';
+        filterCards('', getActiveCategory());
+        searchInput.focus();
+    });
+
+    // ===== Category Filter =====
+    const categoryTabs = document.querySelectorAll('.cat-tab');
+
+    categoryTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            categoryTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const category = this.dataset.category;
+            filterCards(searchInput.value.toLowerCase().trim(), category);
+        });
+    });
+
+    function getActiveCategory() {
+        const activeTab = document.querySelector('.cat-tab.active');
+        return activeTab ? activeTab.dataset.category : 'all';
+    }
+
+    function filterCards(query, category) {
+        let visibleCount = 0;
+
+        cards.forEach((card, index) => {
+            const keywords = card.dataset.keywords.toLowerCase();
+            const cardCategory = card.dataset.category;
+            const matchesSearch = query === '' || keywords.includes(query);
+            const matchesCategory = category === 'all' || cardCategory === category;
+
+            if (matchesSearch && matchesCategory) {
+                card.style.display = '';
+                card.style.animation = `fadeSlideUp 0.4s ease ${index * 0.04}s forwards`;
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.style.animation = '';
+            }
+        });
+
+        noResults.style.display = visibleCount === 0 ? 'flex' : 'none';
+    }
+
+    // ===== Card Expand / Collapse =====
+    cards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.closest('.card-action-btn')) return; // Don't toggle on button click
+            this.classList.toggle('expanded');
+        });
+    });
+
+    // ===== Scroll Animation =====
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-in');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    cards.forEach(card => observer.observe(card));
+    </script>
+
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

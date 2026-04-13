@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Vital Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .dashboard-container {
+            padding: 8rem 5% 4rem;
+            min-height: 100vh;
+        }
+        .welcome-header { margin-bottom: 2rem; }
+        .welcome-header h1 { font-size: 2.5rem; color: var(--primary-dark); }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .dash-card {
+            background: var(--bg-surface);
+            padding: 2rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            text-align: center;
+            transition: var(--transition);
+        }
+        .dash-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+        .dash-card i { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
+        .dash-card h3 { margin-bottom: 0.5rem; }
+        .dash-card p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .dash-card .btn-outline {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            box-shadow: var(--shadow-md);
+        }
+        .dash-card .btn-outline:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(37, 99, 235, 0.3);
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+        }
+        .logout-btn { color: #ef4444 !important; font-weight: 600; cursor: pointer; }
+        .appointments-section { margin-top: 2rem; }
+        .appointments-section h2 { margin-bottom: 1rem; color: var(--primary-dark); }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html" class="active">Dashboard</a>
+            <a href="clinics.html">Find Clinics</a>
+            <a href="appointment.html">Book Care</a>
+        </nav>
+        <div class="nav-actions">
+            <a onclick="logoutUser()" class="logout-btn"><i class='bx bx-log-out'></i> Sign Out</a>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <div class="welcome-header">
+            <h1>Welcome, <span id="user-name">...</span>!</h1>
+            <p>Manage your health journey.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <i class='bx bx-calendar'></i>
+                <h3>My Appointments</h3>
+                <p>View upcoming and past clinic visits.</p>
+                <a href="#my-appointments" class="btn-outline">View Below</a>
+            </div>
+            <div class="dash-card">
+                <i class='bx bx-plus-medical'></i>
+                <h3>Book Care</h3>
+                <p>Need to see a doctor? Book instantly.</p>
+                <a href="appointment.html" class="btn-primary">Book Now</a>
+            </div>
+            <div class="dash-card">
+                <i class='bx bx-map-alt'></i>
+                <h3>Find Clinics</h3>
+                <p>Find nearby healthcare facilities.</p>
+                <a href="clinics.html" class="btn-outline">Search</a>
+            </div>
+            <div class="dash-card" id="admin-review-card" style="display:none;">
+                <i class='bx bx-shield-quarter'></i>
+                <h3>Admin Review</h3>
+                <p>Review chatbot logs and appointment requests.</p>
+                <a href="admin.html" class="btn-outline">Open Panel</a>
+            </div>
+        </div>
+
+        <div class="appointments-section" id="my-appointments">
+            <h2><i class='bx bx-calendar-check'></i> My Appointments</h2>
+            <div id="appointments-list">
+                <p style="color:var(--text-secondary);">Loading your appointments...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { auth } from "./js/firebase.js";
+        import { collection, getDocs, query, where, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { db } from "./js/firebase.js";
+
+        const ADMIN_EMAILS = ["admin@vitalchat.com"];
+
+        async function isAdminUser(user) {
+            if (!user) return false;
+            if (ADMIN_EMAILS.includes(user.email || "")) return true;
+
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                return userDoc.exists() && userDoc.data().role === "admin";
+            } catch (error) {
+                console.error("Dashboard admin role check failed:", error);
+                return false;
+            }
+        }
+
+        // Auth guard + populate user name
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            document.getElementById("user-name").textContent = user.displayName || user.email;
+
+            const adminCard = document.getElementById("admin-review-card");
+            if (adminCard) {
+                const isAdmin = await isAdminUser(user);
+                adminCard.style.display = isAdmin ? "block" : "none";
+            }
+
+            // Load appointments inline - no dependency on external window function
+            const listEl = document.getElementById("appointments-list");
+            if (!listEl) return;
+
+            try {
+                const q = query(
+                    collection(db, "appointments"),
+                    where("userId", "==", user.uid),
+                    orderBy("createdAt", "desc")
+                );
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    listEl.innerHTML = '<p style="color:var(--text-secondary);">No appointments booked yet. <a href="appointment.html" style="color:var(--primary);">Book one now</a>.</p>';
+                    return;
+                }
+
+                listEl.innerHTML = "";
+                snap.forEach(docSnap => {
+                    const a = docSnap.data();
+                    const statusColor = a.status === "confirmed" ? "#16a34a" : a.status === "cancelled" ? "#ef4444" : "#f59e0b";
+                    listEl.innerHTML += `
+                        <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusColor};">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
+                                <div>
+                                    <strong style="font-size:1rem;">${a.hospitalName}</strong><br>
+                                    <span style="color:var(--text-secondary); font-size:0.9rem;">
+                                        <i class='bx bx-calendar'></i> ${a.date} &nbsp;
+                                        <i class='bx bx-time'></i> ${a.time}
+                                    </span>
+                                </div>
+                                <span style="background:${statusColor}22; color:${statusColor}; padding:3px 10px;
+                                    border-radius:20px; font-size:0.8rem; font-weight:600; text-transform:uppercase;">
+                                    ${a.status}
+                                </span>
+                            </div>
+                            ${a.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${a.reason}</p>` : ""}
+                        </div>`;
+                });
+            } catch (err) {
+                listEl.innerHTML = `<p style="color:#ef4444;">Could not load appointments: ${err.message}</p>`;
+            }
+        });
+    </script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

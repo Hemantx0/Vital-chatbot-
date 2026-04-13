@@ -1,0 +1,113 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Vital Chat Health</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8rem 5% 4rem;
+            background: var(--bg-main);
+        }
+        .auth-card {
+            background: var(--bg-surface);
+            padding: 3rem;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+        }
+        .auth-card h2 { text-align: center; margin-bottom: 0.5rem; color: var(--primary-dark); }
+        .auth-card p { text-align: center; color: var(--text-secondary); margin-bottom: 2rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); }
+        .form-group input {
+            width: 100%; padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            outline: none; font-family: inherit;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2); }
+        .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+        .auth-btn { width: 100%; margin-top: 1rem; }
+        .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-secondary); }
+        .auth-footer a { color: var(--primary); font-weight: 600; }
+        #server-error { text-align: center; color: #ef4444; margin-bottom: 1rem; font-weight: 600; display: none; }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="clinics.html">Find Clinics</a>
+            <a href="appointment.html">Book Care</a>
+        </nav>
+        <div class="nav-actions">
+            <a href="login.html" class="btn-outline">Sign In</a>
+            <a href="register.html" class="btn-primary">Register</a>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h2>Create an Account</h2>
+            <p>Join Vital Chat Health</p>
+
+            <form id="registerForm">
+                <div id="server-error">Error. Please try again.</div>
+
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" required placeholder="John Doe">
+                    <div class="error-msg" id="nameError">Please enter your full name (min 2 characters)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="you@example.com">
+                    <div class="error-msg" id="emailError">Please enter a valid email</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="+91 98765 43210">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="••••••••">
+                    <div class="error-msg" id="passwordError">Password must be at least 8 characters</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="••••••••">
+                    <div class="error-msg" id="confirmError">Passwords do not match</div>
+                </div>
+
+                <button type="submit" class="btn-primary auth-btn">Register</button>
+            </form>
+
+            <div class="auth-footer">
+                Already have an account? <a href="login.html">Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

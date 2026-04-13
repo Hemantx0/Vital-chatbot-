@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Care - Vital Chat Health</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="clinics.html">Find Clinics</a>
+            <a href="appointment.html" class="active">Book Care</a>
+        </nav>
+        <div class="nav-actions">
+            <a onclick="logoutUser()" class="logout-btn" style="color:#ef4444; font-weight:600; cursor:pointer;">
+                <i class='bx bx-log-out'></i> Sign Out
+            </a>
+        </div>
+    </header>
+
+    <div style="padding: 10rem 5% 4rem;">
+        <h1>Book Care</h1>
+        <p>Select a hospital or clinic below to book your appointment.</p>
+        <div id="booking-context" style="display:none; margin-top:1rem;"></div>
+        <div id="hospital-grid" class="hospital-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:2rem; margin-top:2rem;"></div>
+    </div>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/appointment.js"></script>
+</body>
+</html>

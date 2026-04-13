@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Review - Vital Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        .admin-container {
+            padding: 8rem 5% 4rem;
+            min-height: 100vh;
+        }
+        .admin-header {
+            margin-bottom: 2rem;
+        }
+        .admin-header h1 {
+            color: var(--primary-dark);
+            margin-bottom: 0.4rem;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .admin-stat {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+        .admin-stat .value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .admin-section {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+        .admin-section h2 {
+            margin-bottom: 1rem;
+            color: var(--primary-dark);
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 850px;
+        }
+        .admin-table th, .admin-table td {
+            padding: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.92rem;
+        }
+        .admin-table th {
+            color: var(--text-secondary);
+            font-weight: 700;
+            background: rgba(37, 99, 235, 0.03);
+        }
+        .admin-guard {
+            max-width: 720px;
+            margin: 10rem auto 0;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <i class='bx bx-pulse'></i> Vital Chat
+        </a>
+        <nav class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="clinics.html">Find Clinics</a>
+            <a href="appointment.html">Book Care</a>
+            <a href="admin.html" class="active">Admin Review</a>
+        </nav>
+        <div class="nav-actions">
+            <a onclick="logoutUser()" class="logout-btn" style="color:#ef4444; font-weight:600; cursor:pointer;">
+                <i class='bx bx-log-out'></i> Sign Out
+            </a>
+        </div>
+    </header>
+
+    <div id="admin-guard" class="glass-card admin-guard" style="display:none;">
+        <h2 style="margin-bottom:0.75rem; color:var(--primary-dark);">Admin Access Required</h2>
+        <p id="admin-guard-message" style="margin:0; color:var(--text-secondary);"></p>
+    </div>
+
+    <div id="admin-content" class="admin-container" style="display:none;">
+        <div class="admin-header">
+            <h1>Admin Review Panel</h1>
+            <p>Signed in as <strong id="admin-name">Admin</strong>.</p>
+        </div>
+
+        <div class="admin-stats">
+            <div class="admin-stat">
+                <div style="color:var(--text-secondary);">Pending Appointments</div>
+                <div class="value" id="stat-pending">0</div>
+            </div>
+            <div class="admin-stat">
+                <div style="color:var(--text-secondary);">Confirmed Appointments</div>
+                <div class="value" id="stat-confirmed">0</div>
+            </div>
+            <div class="admin-stat">
+                <div style="color:var(--text-secondary);">Total Appointments</div>
+                <div class="value" id="stat-total">0</div>
+            </div>
+            <div class="admin-stat">
+                <div style="color:var(--text-secondary);">Chat Logs</div>
+                <div class="value" id="stat-chats">0</div>
+            </div>
+        </div>
+
+        <section class="admin-section">
+            <h2><i class='bx bx-calendar-check'></i> Appointment Review</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Email</th>
+                        <th>Hospital</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="appointments-tbody">
+                    <tr><td colspan="6" style="color:#94a3b8;">Loading appointments...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="admin-section">
+            <h2><i class='bx bx-bot'></i> Chatbot Log Review</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Specialty</th>
+                        <th>Input</th>
+                        <th>Bot Response</th>
+                        <th>Review Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="chatlogs-tbody">
+                    <tr><td colspan="6" style="color:#94a3b8;">Loading chat logs...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </div>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>
