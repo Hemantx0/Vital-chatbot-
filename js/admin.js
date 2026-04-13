@@ -4,6 +4,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { db, auth } from "./firebase.js";
+import { escapeHtml, getAppointmentStatusMeta } from "./ui-utils.js";
 
 const ADMIN_EMAILS = ["admin@vitalchat.com"];
 
@@ -35,15 +36,6 @@ function formatTimestamp(value) {
     return value.toDate().toLocaleString();
   }
   return String(value);
-}
-
-function escapeHtml(text) {
-  return String(text ?? '')
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function isPermissionError(error) {
@@ -147,8 +139,8 @@ async function loadAllAppointments() {
 
     snap.forEach(d => {
       const a = d.data();
-      const appointmentStatus = a.status || 'pending';
-      const statusColor = appointmentStatus === 'confirmed' ? '#16a34a' : appointmentStatus === 'cancelled' ? '#ef4444' : '#f59e0b';
+      const appointmentStatus = a.status || "pending";
+      const statusMeta = getAppointmentStatusMeta(appointmentStatus);
       tbody.innerHTML += `
         <tr>
           <td>${escapeHtml(a.patientName || 'Unknown')}</td>
@@ -156,9 +148,9 @@ async function loadAllAppointments() {
           <td>${escapeHtml(a.hospitalName || '-')}</td>
           <td>${escapeHtml(`${a.date || '-'} ${a.time || ''}`.trim())}</td>
           <td>
-            <span style="background:${statusColor}22; color:${statusColor};
+            <span style="background:${statusMeta.color}22; color:${statusMeta.color};
               padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
-              ${escapeHtml(appointmentStatus)}
+              ${escapeHtml(statusMeta.label)}
             </span>
           </td>
           <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">

@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
-const { findNearbyClinics } = require("./clinicSearch");
+const { findNearbyClinics: findNearbyClinicsService } = require("./clinicSearch");
 
 initializeApp();
 
@@ -505,7 +505,7 @@ exports.findNearbyClinics = onCall(
     }
 
     try {
-      return await findNearbyClinics({
+      return await findNearbyClinicsService({
         specialist,
         locationText,
         lat,

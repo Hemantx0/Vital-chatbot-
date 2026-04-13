@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let botState = 'awaiting_symptom';
     let lastSymptoms = '';
     let lastSpecialty = '';
-    let lastResolvedLocation = null;
     let lastClinicSearchPayload = null;
     const chatSessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const initialAssistantMessage = "Hello! I am your Vital Chat medical assistant. Please describe your symptoms or tell me what kind of specialist you're looking for!";
@@ -350,7 +349,6 @@ document.addEventListener('DOMContentLoaded', () => {
         botState = 'awaiting_symptom';
         lastSymptoms = '';
         lastSpecialty = '';
-        lastResolvedLocation = null;
         lastClinicSearchPayload = null;
         conversationHistory.length = 0;
         appendMessage("Sure! Please describe your new symptoms and I'll find the best care for you.", 'bot');
@@ -508,20 +506,13 @@ document.addEventListener('DOMContentLoaded', () => {
             : (locationInput?.label || 'your current location');
 
         const specialist = lastSpecialty || 'General Physician';
-        const clinicSearchPayload = typeof locationInput === 'string'
-            ? { specialist, locationText: locationInput }
-            : {
-                specialist,
-                locationText: locationInput?.label || '',
-                lat: locationInput?.lat,
-                lng: locationInput?.lng
-            };
+        const clinicSearchPayload = buildClinicSearchPayload(locationInput, specialist);
         lastClinicSearchPayload = clinicSearchPayload;
         const loadingCard = renderClinicLoadingState();
 
         try {
             const clinicSearchResult = await requestNearbyClinics(clinicSearchPayload);
-            loadingCard.remove();
+            removeElement(loadingCard);
 
             if (!clinicSearchResult?.success) {
                 botState = 'awaiting_location';
@@ -529,12 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            lastResolvedLocation = clinicSearchResult.coordinates
-                ? {
-                    ...clinicSearchResult.coordinates,
-                    label: clinicSearchResult.resolvedLocation || locationLabel
-                }
-                : null;
             const results = Array.isArray(clinicSearchResult.clinics) ? clinicSearchResult.clinics : [];
 
             if (results.length === 0) {
@@ -561,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 400);
             }, 300);
         } catch (error) {
-            loadingCard.remove();
+            removeElement(loadingCard);
             botState = 'awaiting_location';
             renderClinicErrorState("Live clinic search is slow right now. Please try again, use a nearby landmark, or share your live location.");
             console.error("Location lookup failed:", error);
@@ -621,3 +606,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+    function removeElement(element) {
+        if (element && typeof element.remove === 'function') {
+            element.remove();
+        }
+    }
+
+    function buildClinicSearchPayload(locationInput, specialist) {
+        if (typeof locationInput === 'string') {
+            return {
+                specialist,
+                locationText: locationInput
+            };
+        }
+
+        return {
+            specialist,
+            locationText: locationInput?.label || '',
+            lat: locationInput?.lat,
+            lng: locationInput?.lng
+        };
+    }

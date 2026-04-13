@@ -5,6 +5,7 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { auth, db } from "./firebase.js";
 import { clinics as fallbackClinics } from "./clinic-data.js";
+import { escapeHtml, getAppointmentStatusMeta } from "./ui-utils.js";
 
 const urlParams = new URLSearchParams(window.location.search);
 const selectedHospitalName = urlParams.get("hospital") || "";
@@ -20,13 +21,20 @@ const selectedClinicDetails = {
   openNow: urlParams.get("openNow") === "true"
 };
 
-function escapeHtml(text) {
-  return String(text)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+function getNormalizedSelectedClinic() {
+  if (!selectedHospitalName) {
+    return null;
+  }
+
+  return {
+    name: selectedClinicDetails.name,
+    address: selectedClinicDetails.address || "Address not available",
+    phone: selectedClinicDetails.phone || "Phone not available",
+    rating: Number.isFinite(selectedClinicDetails.rating) ? selectedClinicDetails.rating : 0,
+    type: selectedClinicDetails.source || "Recommended clinic",
+    status: selectedClinicDetails.openNow ? "Open" : "Check timings",
+    mapsUrl: selectedClinicDetails.mapsUrl || ""
+  };
 }
 
 function renderBookingContext() {
@@ -63,19 +71,8 @@ function renderHospitalCards() {
   if (!grid) return;
 
   grid.innerHTML = "";
-  const recommendedClinics = [];
-
-  if (selectedHospitalName) {
-    recommendedClinics.push({
-      name: selectedClinicDetails.name,
-      address: selectedClinicDetails.address || "Address not available",
-      phone: selectedClinicDetails.phone || "Phone not available",
-      rating: Number.isFinite(selectedClinicDetails.rating) ? selectedClinicDetails.rating : 0,
-      type: selectedClinicDetails.source || "Recommended clinic",
-      status: selectedClinicDetails.openNow ? "Open" : "Check timings",
-      mapsUrl: selectedClinicDetails.mapsUrl || ""
-    });
-  }
+  const selectedClinic = getNormalizedSelectedClinic();
+  const recommendedClinics = selectedClinic ? [selectedClinic] : [];
 
   const orderedClinics = recommendedClinics.length > 0
     ? recommendedClinics
@@ -272,9 +269,9 @@ window.loadMyAppointments = async function() {
       listEl.innerHTML = "";
       snap.forEach(docSnap => {
         const a = docSnap.data();
-        const statusColor = a.status === 'confirmed' ? '#16a34a' : a.status === 'cancelled' ? '#ef4444' : '#f59e0b';
+        const statusMeta = getAppointmentStatusMeta(a.status);
         listEl.innerHTML += `
-          <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusColor};">
+          <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusMeta.color};">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
               <div>
                 <strong style="font-size:1rem;">${a.hospitalName}</strong><br>
@@ -283,9 +280,9 @@ window.loadMyAppointments = async function() {
                   <i class='bx bx-time'></i> ${a.time}
                 </span>
               </div>
-              <span style="background:${statusColor}22; color:${statusColor}; padding:3px 10px;
+              <span style="background:${statusMeta.color}22; color:${statusMeta.color}; padding:3px 10px;
                 border-radius:20px; font-size:0.8rem; font-weight:600; text-transform:uppercase;">
-                ${a.status}
+                ${statusMeta.label}
               </span>
             </div>
             ${a.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${a.reason}</p>` : ''}
