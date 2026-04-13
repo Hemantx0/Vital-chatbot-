@@ -1,6 +1,7 @@
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
+const { findNearbyClinics } = require("./clinicSearch");
 
 initializeApp();
 
@@ -477,5 +478,45 @@ exports.chatAssistant = onCall(
       model: "fallback-rules",
       generatedAt: new Date().toISOString()
     };
+  }
+);
+
+exports.findNearbyClinics = onCall(
+  {
+    region: "asia-south1",
+    timeoutSeconds: 60,
+    memory: "256MiB"
+  },
+  async (request) => {
+    const specialist = String(request.data?.specialist || "").trim();
+    const locationText = String(request.data?.locationText || "").trim();
+    const lat = request.data?.lat;
+    const lng = request.data?.lng;
+    const radius = request.data?.radius;
+    const city = String(request.data?.city || "").trim();
+    const state = String(request.data?.state || "").trim();
+
+    if (!specialist) {
+      throw new HttpsError("invalid-argument", "The 'specialist' field is required.");
+    }
+
+    if (!locationText && !city && !state && (lat === undefined || lng === undefined)) {
+      throw new HttpsError("invalid-argument", "Provide either 'locationText' or both 'lat' and 'lng'.");
+    }
+
+    try {
+      return await findNearbyClinics({
+        specialist,
+        locationText,
+        lat,
+        lng,
+        radius,
+        city,
+        state
+      });
+    } catch (error) {
+      logger.error("Clinic search failed.", error);
+      throw new HttpsError("internal", "Unable to search clinics right now.");
+    }
   }
 );

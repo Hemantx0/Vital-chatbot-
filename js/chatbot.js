@@ -3,7 +3,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { auth, db, functions } from "./firebase.js";
-import { clinics as hospitals, haversineDistanceKm, formatDistance } from "./clinic-data.js";
+import { requestNearbyClinics } from "./clinic-search-api.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -12,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatAssistant = httpsCallable(functions, 'chatAssistant');
 
     const symptomMap = [
-        { keywords: ['fever', 'cold', 'cough', 'flu', 'headache', 'body ache', 'fatigue', 'weakness', 'nausea', 'vomit'], specialty: 'General Physician', types: ['Hospital', 'General Hospital', 'Clinic', 'Healthcare Clinic', 'Polyclinic', 'Private Hospital'] },
-        { keywords: ['chest pain', 'heart', 'blood pressure', 'bp', 'palpitation', 'cardiac', 'cardiologist'], specialty: 'Cardiologist', types: ['Hospital', 'General Hospital', 'Private Hospital'] },
-        { keywords: ['tooth', 'teeth', 'gum', 'dental', 'cavity', 'mouth', 'dentist'], specialty: 'Dentist', types: ['Dental Clinic', 'Hospital'] },
-        { keywords: ['skin', 'rash', 'acne', 'pimple', 'itch', 'allergy', 'eczema', 'hair loss', 'hair fall', 'dandruff', 'dermatologist'], specialty: 'Dermatologist', types: ['Skin & Hair Clinic', 'Skin Clinic', 'Hospital', 'Clinic'] },
-        { keywords: ['child', 'baby', 'infant', 'kid', 'pediatric', 'vaccination', 'pediatrician'], specialty: 'Pediatrician', types: ['Child Care Clinic', 'Hospital', 'General Hospital', 'Private Hospital'] },
-        { keywords: ['bone', 'joint', 'fracture', 'knee', 'back pain', 'spine', 'shoulder', 'muscle', 'sprain', 'physiotherapy', 'paralysis', 'orthopedic', 'orthopaedic', 'physiotherapist'], specialty: 'Orthopedic / Physiotherapist', types: ['Physiotherapy Clinic', 'Physiotherapy Centre', 'Hospital', 'Private Hospital'] },
-        { keywords: ['stomach', 'digestion', 'gastric', 'acidity', 'diarrhea', 'constipation', 'abdomen', 'liver', 'gastroenterologist'], specialty: 'Gastroenterologist', types: ['Hospital', 'General Hospital', 'Clinic'] },
-        { keywords: ['eye', 'vision', 'blur', 'cataract', 'ophthalmologist'], specialty: 'Ophthalmologist', types: ['Hospital', 'Private Hospital'] },
-        { keywords: ['ear', 'nose', 'throat', 'sore throat', 'sinus', 'hearing', 'ent', 'otolaryngologist'], specialty: 'ENT Specialist', types: ['Hospital', 'Clinic', 'Private Hospital'] },
-        { keywords: ['ayurveda', 'herbal', 'natural', 'panchakarma', 'yoga', 'ayurvedic'], specialty: 'Ayurvedic Practitioner', types: ['Ayurveda Centre', 'Clinic'] },
+        { keywords: ['fever', 'cold', 'cough', 'flu', 'headache', 'body ache', 'fatigue', 'weakness', 'nausea', 'vomit'], specialty: 'General Physician' },
+        { keywords: ['chest pain', 'heart', 'blood pressure', 'bp', 'palpitation', 'cardiac', 'cardiologist'], specialty: 'Cardiologist' },
+        { keywords: ['tooth', 'teeth', 'gum', 'dental', 'cavity', 'mouth', 'dentist'], specialty: 'Dentist' },
+        { keywords: ['skin', 'rash', 'acne', 'pimple', 'itch', 'allergy', 'eczema', 'hair loss', 'hair fall', 'dandruff', 'dermatologist'], specialty: 'Dermatologist' },
+        { keywords: ['child', 'baby', 'infant', 'kid', 'pediatric', 'vaccination', 'pediatrician'], specialty: 'Pediatrician' },
+        { keywords: ['bone', 'joint', 'fracture', 'knee', 'back pain', 'spine', 'shoulder', 'muscle', 'sprain', 'physiotherapy', 'paralysis', 'orthopedic', 'orthopaedic', 'physiotherapist'], specialty: 'Orthopedic / Physiotherapist' },
+        { keywords: ['stomach', 'digestion', 'gastric', 'acidity', 'diarrhea', 'constipation', 'abdomen', 'liver', 'gastroenterologist'], specialty: 'Gastroenterologist' },
+        { keywords: ['eye', 'vision', 'blur', 'cataract', 'ophthalmologist'], specialty: 'Ophthalmologist' },
+        { keywords: ['ear', 'nose', 'throat', 'sore throat', 'sinus', 'hearing', 'ent', 'otolaryngologist'], specialty: 'ENT Specialist' },
+        { keywords: ['ayurveda', 'herbal', 'natural', 'panchakarma', 'yoga', 'ayurvedic'], specialty: 'Ayurvedic Practitioner' },
     ];
     const greetingWords = ['hi', 'hello', 'hey', 'hii', 'helo', 'good morning', 'good afternoon', 'good evening'];
     const helpWords = ['help', 'start', 'menu', 'options'];
@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastSymptoms = '';
     let lastSpecialty = '';
     let lastResolvedLocation = null;
+    let lastClinicSearchPayload = null;
     const chatSessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const initialAssistantMessage = "Hello! I am your Vital Chat medical assistant. Please describe your symptoms or tell me what kind of specialist you're looking for!";
     const conversationHistory = [
@@ -58,6 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.maxWidth = '85%';
         el.style.boxShadow = 'var(--shadow-sm)';
         el.style.borderBottomLeftRadius = '4px';
+    }
+
+    function appendBotCard(html) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message bot';
+        styleBotMsg(msgDiv);
+        msgDiv.innerHTML = html;
+        messagesContainer.appendChild(msgDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        return msgDiv;
     }
 
     function appendMessage(text, sender, options = {}) {
@@ -223,143 +234,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return matches[0] || null;
     }
 
-    function getSpecialtyConfig(specialtyName, symptomText = '') {
-        if (specialtyName) {
-            const normalizedSpecialtyName = normalizeText(specialtyName).replace(/\s+/g, '');
-            const exactMatch = symptomMap.find((entry) => {
-                const normalizedEntrySpecialty = normalizeText(entry.specialty).replace(/\s+/g, '');
-                return normalizedEntrySpecialty === normalizedSpecialtyName;
-            });
-            if (exactMatch) {
-                return exactMatch;
-            }
-
-            const keywordMatch = symptomMap.find((entry) =>
-                entry.keywords.some((keyword) => containsKeyword(normalizeText(specialtyName), keyword))
-            );
-            if (keywordMatch) {
-                return keywordMatch;
-            }
-        }
-
-        return symptomText ? matchSpecialty(symptomText) : null;
-    }
-
-    function parseCoordinateInput(text) {
-        const latLngPattern = /lat[:\s]*(-?\d+(\.\d+)?)[,\s]+lng[:\s]*(-?\d+(\.\d+)?)/i;
-        const plainPattern = /(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)/;
-        let match = text.match(latLngPattern);
-
-        if (!match) {
-            match = text.match(plainPattern);
-        }
-
-        if (!match) return null;
-
-        const lat = parseFloat(match[1]);
-        const lng = parseFloat(match[3]);
-        if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
-
-        return { lat, lng, label: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}` };
-    }
-
-    function findLocalLocationMatch(queryText) {
-        const normalizedQuery = normalizeText(queryText);
-        if (!normalizedQuery || normalizedQuery.length < 3) return null;
-
-        const matches = hospitals.filter((hospital) => {
-            const normalizedAddress = normalizeText(hospital.address);
-            const normalizedName = normalizeText(hospital.name);
-            return normalizedAddress.includes(normalizedQuery) || normalizedName.includes(normalizedQuery);
-        });
-
-        if (matches.length === 0) return null;
-
-        const center = matches.reduce((accumulator, hospital) => ({
-            lat: accumulator.lat + hospital.lat,
-            lng: accumulator.lng + hospital.lng
-        }), { lat: 0, lng: 0 });
-
-        return {
-            lat: center.lat / matches.length,
-            lng: center.lng / matches.length,
-            label: queryText,
-            source: 'local-dataset',
-            matchedClinics: matches.length
-        };
-    }
-
-    async function geocodeLocation(queryText) {
-        const coordinateInput = parseCoordinateInput(queryText);
-        if (coordinateInput) {
-            return coordinateInput;
-        }
-
-        const localLocationMatch = findLocalLocationMatch(queryText);
-        if (localLocationMatch) {
-            return localLocationMatch;
-        }
-
-        const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(queryText)}`;
-        const response = await fetch(url, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Location lookup failed (${response.status})`);
-        }
-
-        const results = await response.json();
-        if (!Array.isArray(results) || results.length === 0) {
-            return null;
-        }
-
-        const result = results[0];
-        return {
-            lat: parseFloat(result.lat),
-            lng: parseFloat(result.lon),
-            label: result.display_name || queryText
-        };
-    }
-
-    function findHospitals(types, userLocation, count = 3) {
-        const scored = hospitals
-            .filter(hospital => types.includes(hospital.type))
-            .map(hospital => {
-                const distanceKm = userLocation
-                    ? haversineDistanceKm(userLocation.lat, userLocation.lng, hospital.lat, hospital.lng)
-                    : null;
-                let score = 0;
-                if (hospital.status === 'Open') score += 20;
-                score += hospital.rating * 2;
-                if (distanceKm !== null) {
-                    score += Math.max(0, 20 - distanceKm * 2.5);
-                }
-                return {
-                    ...hospital,
-                    distanceKm,
-                    distanceLabel: distanceKm !== null ? formatDistance(distanceKm) : 'Distance unavailable',
-                    score
-                };
-            });
-
-        scored.sort((a, b) => {
-            if (a.status !== b.status) return a.status === 'Open' ? -1 : 1;
-            if (a.distanceKm !== null && b.distanceKm !== null && Math.abs(a.distanceKm - b.distanceKm) > 0.2) {
-                return a.distanceKm - b.distanceKm;
-            }
-            return b.rating - a.rating;
-        });
-
-        return scored.slice(0, count);
+    function formatDistanceLabel(distanceKm) {
+        return typeof distanceKm === 'number' ? `${distanceKm.toFixed(1)} km` : 'Distance unavailable';
     }
 
     function buildBookingUrl(hospital) {
         const params = new URLSearchParams();
         params.set('hospital', hospital.name);
         if (lastSpecialty) params.set('specialty', lastSpecialty);
+        if (hospital.address) params.set('address', hospital.address);
+        if (hospital.phone) params.set('phone', hospital.phone);
+        if (typeof hospital.rating === 'number') params.set('rating', String(hospital.rating));
+        if (typeof hospital.distanceKm === 'number') params.set('distanceKm', String(hospital.distanceKm));
+        if (hospital.mapsUrl) params.set('mapsUrl', hospital.mapsUrl);
+        if (hospital.source) params.set('source', hospital.source);
+        params.set('openNow', hospital.openNow ? 'true' : 'false');
         return `appointment.html?${params.toString()}`;
     }
 
@@ -372,7 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.style.gap = '0.6rem';
 
         clinics.forEach(clinic => {
-            const statusColor = clinic.status === 'Open' ? '#16a34a' : '#ef4444';
+            const isOpen = clinic.openNow === true;
+            const statusLabel = isOpen ? 'Open' : 'Check timings';
+            const statusColor = isOpen ? '#16a34a' : '#64748b';
+            const distanceLabel = formatDistanceLabel(clinic.distanceKm);
             const card = document.createElement('div');
             card.style.cssText = `
                 background: var(--bg-surface);
@@ -388,20 +280,27 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
                     <h4 style="margin:0; color: var(--primary-dark); font-size:0.95rem;">${clinic.name}</h4>
-                    <span style="background:${statusColor}; color:#fff; padding:1px 8px; border-radius:20px; font-size:0.7rem; font-weight:600; white-space:nowrap;">${clinic.status}</span>
+                    <span style="background:${statusColor}; color:#fff; padding:1px 8px; border-radius:20px; font-size:0.7rem; font-weight:600; white-space:nowrap;">${statusLabel}</span>
                 </div>
                 <p style="font-size:0.78rem; color: var(--text-secondary); margin:0.15rem 0;">
-                    <i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${clinic.rating} &bull; ${clinic.type} &bull; ${clinic.distanceLabel}
+                    <i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${clinic.rating || 'N/A'} &bull; ${distanceLabel}
                 </p>
                 <p style="font-size:0.76rem; color: var(--text-muted); margin:0.15rem 0;">
                     <i class='bx bx-map' style="color:var(--primary); font-size:0.8rem;"></i> ${clinic.address}
                 </p>
                 <p style="font-size:0.76rem; color: var(--text-muted); margin:0.15rem 0 0.5rem;">
-                    <i class='bx bx-phone' style="color:var(--primary); font-size:0.8rem;"></i> ${clinic.phone}
+                    <i class='bx bx-phone' style="color:var(--primary); font-size:0.8rem;"></i> ${clinic.phone || 'Phone not available'}
                 </p>
-                <a href="${buildBookingUrl(clinic)}" class="btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
-                    <i class='bx bx-calendar-check'></i> Book Appointment
-                </a>
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                    <a href="${buildBookingUrl(clinic)}" class="btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
+                        <i class='bx bx-calendar-check'></i> Book Appointment
+                    </a>
+                    ${clinic.mapsUrl
+                        ? `<a href="${clinic.mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-outline" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
+                            <i class='bx bx-map-alt'></i> Open Map
+                        </a>`
+                        : ''}
+                </div>
             `;
             wrapper.appendChild(card);
         });
@@ -411,17 +310,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showResetPrompt() {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message bot';
-        styleBotMsg(msgDiv);
-        msgDiv.innerHTML = `
+        appendBotCard(`
             <p style="margin-bottom:0.5rem;">Would you like to search for another condition?</p>
             <button class="btn-outline" style="padding:0.4rem 1rem; font-size:0.85rem; cursor:pointer;" onclick="resetChatBot()">
                 <i class='bx bx-refresh'></i> New Search
             </button>
-        `;
-        messagesContainer.appendChild(msgDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        `);
+    }
+
+    function renderClinicLoadingState() {
+        return appendBotCard(`
+            <p style="margin:0; display:flex; align-items:center; gap:0.5rem;">
+                <i class="bx bx-loader-alt bx-spin"></i>
+                Searching nearby clinics and hospitals...
+            </p>
+        `);
+    }
+
+    function renderClinicEmptyState(message) {
+        appendBotCard(`
+            <p style="margin:0 0 0.75rem;">${message}</p>
+            <button class="btn-outline" style="padding:0.45rem 1rem; font-size:0.85rem; cursor:pointer;" onclick="retryClinicSearch()">
+                <i class='bx bx-refresh'></i> Try Again
+            </button>
+        `);
+    }
+
+    function renderClinicErrorState(message) {
+        appendBotCard(`
+            <p style="margin:0 0 0.75rem; color:#b91c1c;">${message}</p>
+            <button class="btn-outline" style="padding:0.45rem 1rem; font-size:0.85rem; cursor:pointer;" onclick="retryClinicSearch()">
+                <i class='bx bx-refresh'></i> Retry Search
+            </button>
+        `);
+        appendMessage('You can also type a nearby area name or share your live location again.', 'bot');
     }
 
     window.resetChatBot = function() {
@@ -429,8 +351,19 @@ document.addEventListener('DOMContentLoaded', () => {
         lastSymptoms = '';
         lastSpecialty = '';
         lastResolvedLocation = null;
+        lastClinicSearchPayload = null;
         conversationHistory.length = 0;
         appendMessage("Sure! Please describe your new symptoms and I'll find the best care for you.", 'bot');
+    };
+
+    window.retryClinicSearch = function() {
+        if (!lastClinicSearchPayload) {
+            appendMessage("Please share your location again so I can search nearby clinics.", 'bot');
+            botState = 'awaiting_location';
+            return;
+        }
+
+        resolveAndShowClinics(lastClinicSearchPayload);
     };
 
     async function logChatToFirebase(userInput, botResponse, specialty, metadata = {}) {
@@ -460,18 +393,13 @@ document.addEventListener('DOMContentLoaded', () => {
         appendMessage(`Let me find the nearest top-rated clinics${specialtyText}. Share your live location or type your area, such as Jagatpura or Malviya Nagar.`, 'bot');
 
         const btnId = 'loc-btn-' + Date.now();
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message bot';
-        styleBotMsg(msgDiv);
-        msgDiv.innerHTML = `
+        appendBotCard(`
             <div id="${btnId}" style="margin-top:0.25rem;">
                 <button class="btn-primary" style="padding:0.5rem 1rem; font-size:0.9rem;" onclick="requestBotLocation('${btnId}')">
                     <i class='bx bx-current-location'></i> Share My Location
                 </button>
             </div>
-        `;
-        messagesContainer.appendChild(msgDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        `);
         botState = 'awaiting_location';
     }
 
@@ -511,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             logChatToFirebase(text, combinedBotResponse, lastSpecialty || 'Unclear', assistantResult);
 
-            if (assistantResult.specialty && assistantResult.needsLocation && !assistantResult.needsMoreInfo && !assistantResult.emergency) {
+            if (lastSpecialty && assistantResult.needsLocation && !assistantResult.needsMoreInfo && !assistantResult.emergency) {
                 setTimeout(() => {
                     showLocationPrompt();
                 }, 600);
@@ -573,35 +501,55 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
     }
 
-    async function resolveAndShowClinics(locationText) {
+    async function resolveAndShowClinics(locationInput) {
         botState = 'finding_clinics';
-        appendMessage(`Searching for the best clinics near: ${locationText}...`, 'bot');
+        const locationLabel = typeof locationInput === 'string'
+            ? locationInput
+            : (locationInput?.label || 'your current location');
+
+        const specialist = lastSpecialty || 'General Physician';
+        const clinicSearchPayload = typeof locationInput === 'string'
+            ? { specialist, locationText: locationInput }
+            : {
+                specialist,
+                locationText: locationInput?.label || '',
+                lat: locationInput?.lat,
+                lng: locationInput?.lng
+            };
+        lastClinicSearchPayload = clinicSearchPayload;
+        const loadingCard = renderClinicLoadingState();
 
         try {
-            const resolvedLocation = await geocodeLocation(locationText);
-            if (!resolvedLocation) {
+            const clinicSearchResult = await requestNearbyClinics(clinicSearchPayload);
+            loadingCard.remove();
+
+            if (!clinicSearchResult?.success) {
                 botState = 'awaiting_location';
-                appendMessage("I couldn't find that location. Please try a nearby area name, landmark, or share your live location.", 'bot');
+                renderClinicErrorState(clinicSearchResult?.message || "I couldn't find that location. Please try a nearby area name, landmark, or share your live location.");
                 return;
             }
 
-            lastResolvedLocation = resolvedLocation;
-            const specialtyConfig = getSpecialtyConfig(lastSpecialty, lastSymptoms);
-            if (!specialtyConfig) {
-                botState = 'awaiting_symptom';
-                appendMessage("I understood the concern, but I couldn't map it to a clinic type yet. Please try describing the symptom again or name the specialist directly.", 'bot');
-                return;
-            }
-
-            const results = findHospitals(specialtyConfig.types, resolvedLocation, 3);
+            lastResolvedLocation = clinicSearchResult.coordinates
+                ? {
+                    ...clinicSearchResult.coordinates,
+                    label: clinicSearchResult.resolvedLocation || locationLabel
+                }
+                : null;
+            const results = Array.isArray(clinicSearchResult.clinics) ? clinicSearchResult.clinics : [];
 
             if (results.length === 0) {
-                botState = 'awaiting_symptom';
-                appendMessage("I couldn't find matching clinics for that specialty right now. Please try another symptom or specialty.", 'bot');
+                botState = 'awaiting_location';
+                renderClinicEmptyState(clinicSearchResult.message || `No suitable nearby ${specialist.toLowerCase()} clinics were found. Try a broader area or live location.`);
                 return;
             }
 
-            appendMessage(`I found ${results.length} nearby options for a ${lastSpecialty} around ${resolvedLocation.label}.`, 'bot');
+            appendMessage(
+                clinicSearchResult.message || `I found ${results.length} nearby options for a ${specialist}.`,
+                'bot'
+            );
+            if (clinicSearchResult.resolvedLocation) {
+                appendMessage(`Showing results around ${clinicSearchResult.resolvedLocation}.`, 'bot');
+            }
 
             setTimeout(() => {
                 renderClinicCards(results);
@@ -613,8 +561,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 400);
             }, 300);
         } catch (error) {
+            loadingCard.remove();
             botState = 'awaiting_location';
-            appendMessage("I couldn't fetch location details right now. Please try again in a moment or share your live location.", 'bot');
+            renderClinicErrorState("Live clinic search is slow right now. Please try again, use a nearby landmark, or share your live location.");
             console.error("Location lookup failed:", error);
         }
     }
@@ -647,7 +596,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    resolveAndShowClinics(`Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`);
+                    resolveAndShowClinics({
+                        lat,
+                        lng,
+                        label: 'your current location'
+                    });
                 },
                 () => {
                     if (container) container.innerHTML = '<p style="color:#ef4444;">Location access denied. Please type your area name instead.</p>';

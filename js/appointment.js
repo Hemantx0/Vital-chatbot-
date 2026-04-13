@@ -4,11 +4,21 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { auth, db } from "./firebase.js";
-import { clinics } from "./clinic-data.js";
+import { clinics as fallbackClinics } from "./clinic-data.js";
 
 const urlParams = new URLSearchParams(window.location.search);
 const selectedHospitalName = urlParams.get("hospital") || "";
 const selectedSpecialty = urlParams.get("specialty") || "";
+const selectedClinicDetails = {
+  name: selectedHospitalName,
+  address: urlParams.get("address") || "",
+  phone: urlParams.get("phone") || "",
+  rating: Number.parseFloat(urlParams.get("rating") || ""),
+  distanceKm: Number.parseFloat(urlParams.get("distanceKm") || ""),
+  mapsUrl: urlParams.get("mapsUrl") || "",
+  source: urlParams.get("source") || "",
+  openNow: urlParams.get("openNow") === "true"
+};
 
 function escapeHtml(text) {
   return String(text)
@@ -53,13 +63,33 @@ function renderHospitalCards() {
   if (!grid) return;
 
   grid.innerHTML = "";
-  const orderedClinics = [...clinics].sort((a, b) => {
-    if (selectedHospitalName) {
-      if (a.name === selectedHospitalName) return -1;
-      if (b.name === selectedHospitalName) return 1;
-    }
-    return b.rating - a.rating;
-  });
+  const recommendedClinics = [];
+
+  if (selectedHospitalName) {
+    recommendedClinics.push({
+      name: selectedClinicDetails.name,
+      address: selectedClinicDetails.address || "Address not available",
+      phone: selectedClinicDetails.phone || "Phone not available",
+      rating: Number.isFinite(selectedClinicDetails.rating) ? selectedClinicDetails.rating : 0,
+      type: selectedClinicDetails.source || "Recommended clinic",
+      status: selectedClinicDetails.openNow ? "Open" : "Check timings",
+      mapsUrl: selectedClinicDetails.mapsUrl || ""
+    });
+  }
+
+  const orderedClinics = recommendedClinics.length > 0
+    ? recommendedClinics
+    : [...fallbackClinics]
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 6);
+
+  if (recommendedClinics.length === 0) {
+    const note = document.createElement("p");
+    note.style.color = "var(--text-secondary)";
+    note.style.marginBottom = "1rem";
+    note.textContent = "Showing fallback clinic cards because no backend-selected clinic was passed into this booking page.";
+    grid.appendChild(note);
+  }
 
   orderedClinics.forEach((clinic) => {
     const statusColor = clinic.status === "Open" ? "#16a34a" : "#ef4444";
@@ -83,6 +113,7 @@ function renderHospitalCards() {
       ${selectedSpecialty && isSelected ? `<p style="margin:0.35rem 0; color:var(--primary); font-size:0.9rem; font-weight:600;"><i class='bx bx-user-pin'></i> Best matched for ${escapeHtml(selectedSpecialty)}</p>` : ""}
       <p style="margin:0.5rem 0;"><i class='bx bx-map' style="color: var(--primary);"></i> ${clinic.address}</p>
       <p style="margin:0.5rem 0;"><i class='bx bx-phone' style="color: var(--primary);"></i> ${clinic.phone}</p>
+      ${clinic.mapsUrl ? `<p style="margin:0.5rem 0;"><a href="${clinic.mapsUrl}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:none;"><i class='bx bx-map-alt'></i> Open in Maps</a></p>` : ""}
       <button class="btn-primary" style="margin-top:1rem; width:100%;" onclick="openBookingModal('${clinic.name.replace(/'/g, "\\'")}')">Book Appointment</button>
     `;
     grid.appendChild(card);
