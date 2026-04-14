@@ -4,6 +4,7 @@ import {
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 import { auth, db, functions } from "./firebase.js";
 import { requestNearbyClinics } from "./clinic-search-api.js";
+import { normalizeClinic, saveSelectedClinic } from "./clinic-utils.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('chat-send-btn');
@@ -237,18 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeof distanceKm === 'number' ? `${distanceKm.toFixed(1)} km` : 'Distance unavailable';
     }
 
-    function buildBookingUrl(hospital) {
-        const params = new URLSearchParams();
-        params.set('hospital', hospital.name);
-        if (lastSpecialty) params.set('specialty', lastSpecialty);
-        if (hospital.address) params.set('address', hospital.address);
-        if (hospital.phone) params.set('phone', hospital.phone);
-        if (typeof hospital.rating === 'number') params.set('rating', String(hospital.rating));
-        if (typeof hospital.distanceKm === 'number') params.set('distanceKm', String(hospital.distanceKm));
-        if (hospital.mapsUrl) params.set('mapsUrl', hospital.mapsUrl);
-        if (hospital.source) params.set('source', hospital.source);
-        params.set('openNow', hospital.openNow ? 'true' : 'false');
-        return `appointment.html?${params.toString()}`;
+    function buildBookingUrl() {
+        return 'appointment.html';
+    }
+
+    function prepareClinicForBooking(clinic) {
+        return normalizeClinic(clinic, {
+            specialtyMatched: lastSpecialty,
+            searchContext: lastClinicSearchPayload?.locationText || lastClinicSearchPayload?.label || ''
+        });
     }
 
     function renderClinicCards(clinics) {
@@ -260,10 +258,11 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.style.gap = '0.6rem';
 
         clinics.forEach(clinic => {
-            const isOpen = clinic.openNow === true;
+            const bookingClinic = prepareClinicForBooking(clinic);
+            const isOpen = bookingClinic?.openNow === true;
             const statusLabel = isOpen ? 'Open' : 'Check timings';
             const statusColor = isOpen ? '#16a34a' : '#64748b';
-            const distanceLabel = formatDistanceLabel(clinic.distanceKm);
+            const distanceLabel = formatDistanceLabel(bookingClinic?.distanceKm);
             const card = document.createElement('div');
             card.style.cssText = `
                 background: var(--bg-surface);
@@ -278,29 +277,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-                    <h4 style="margin:0; color: var(--primary-dark); font-size:0.95rem;">${clinic.name}</h4>
+                    <h4 style="margin:0; color: var(--primary-dark); font-size:0.95rem;">${bookingClinic.name}</h4>
                     <span style="background:${statusColor}; color:#fff; padding:1px 8px; border-radius:20px; font-size:0.7rem; font-weight:600; white-space:nowrap;">${statusLabel}</span>
                 </div>
                 <p style="font-size:0.78rem; color: var(--text-secondary); margin:0.15rem 0;">
-                    <i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${clinic.rating || 'N/A'} &bull; ${distanceLabel}
+                    <i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${bookingClinic.rating || 'N/A'} &bull; ${distanceLabel}
                 </p>
                 <p style="font-size:0.76rem; color: var(--text-muted); margin:0.15rem 0;">
-                    <i class='bx bx-map' style="color:var(--primary); font-size:0.8rem;"></i> ${clinic.address}
+                    <i class='bx bx-map' style="color:var(--primary); font-size:0.8rem;"></i> ${bookingClinic.address}
                 </p>
                 <p style="font-size:0.76rem; color: var(--text-muted); margin:0.15rem 0 0.5rem;">
-                    <i class='bx bx-phone' style="color:var(--primary); font-size:0.8rem;"></i> ${clinic.phone || 'Phone not available'}
+                    <i class='bx bx-phone' style="color:var(--primary); font-size:0.8rem;"></i> ${bookingClinic.phone || 'Phone not available'}
                 </p>
                 <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <a href="${buildBookingUrl(clinic)}" class="btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
+                    <a href="${buildBookingUrl()}" data-book-appointment="true" class="btn-primary" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
                         <i class='bx bx-calendar-check'></i> Book Appointment
                     </a>
-                    ${clinic.mapsUrl
-                        ? `<a href="${clinic.mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-outline" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
+                    ${bookingClinic.mapsUrl
+                        ? `<a href="${bookingClinic.mapsUrl}" target="_blank" rel="noopener noreferrer" class="btn-outline" style="padding:0.4rem 1rem; font-size:0.8rem; display:inline-flex; text-decoration:none; gap:0.3rem;">
                             <i class='bx bx-map-alt'></i> Open Map
                         </a>`
                         : ''}
                 </div>
             `;
+
+            const bookingLink = card.querySelector('[data-book-appointment="true"]');
+            if (bookingLink && bookingClinic) {
+                bookingLink.addEventListener('click', () => {
+                    saveSelectedClinic(bookingClinic);
+                });
+            }
+
             wrapper.appendChild(card);
         });
 

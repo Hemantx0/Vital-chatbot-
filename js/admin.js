@@ -141,11 +141,13 @@ async function loadAllAppointments() {
       const a = d.data();
       const appointmentStatus = a.status || "pending";
       const statusMeta = getAppointmentStatusMeta(appointmentStatus);
+      const clinicName = a.clinic?.name || a.hospitalName || "-";
+      const specialty = a.specialty ? `<div style="margin-top:0.35rem; color:#2563eb; font-size:0.8rem;">${escapeHtml(a.specialty)}</div>` : "";
       tbody.innerHTML += `
         <tr>
           <td>${escapeHtml(a.patientName || 'Unknown')}</td>
           <td>${escapeHtml(a.patientEmail || '-')}</td>
-          <td>${escapeHtml(a.hospitalName || '-')}</td>
+          <td>${escapeHtml(clinicName)}${specialty}</td>
           <td>${escapeHtml(`${a.date || '-'} ${a.time || ''}`.trim())}</td>
           <td>
             <span style="background:${statusMeta.color}22; color:${statusMeta.color};

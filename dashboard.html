@@ -126,6 +126,15 @@
             }
         }
 
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
         // Auth guard + populate user name
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -161,22 +170,27 @@
                 snap.forEach(docSnap => {
                     const a = docSnap.data();
                     const statusColor = a.status === "confirmed" ? "#16a34a" : a.status === "cancelled" ? "#ef4444" : "#f59e0b";
+                    const clinicName = a.clinic?.name || a.hospitalName || "Clinic not available";
+                    const specialty = a.specialty
+                        ? `<p style="margin:0.35rem 0 0; color:var(--primary); font-size:0.85rem;">${escapeHtml(a.specialty)}</p>`
+                        : "";
                     listEl.innerHTML += `
                         <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusColor};">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
                                 <div>
-                                    <strong style="font-size:1rem;">${a.hospitalName}</strong><br>
+                                    <strong style="font-size:1rem;">${escapeHtml(clinicName)}</strong><br>
                                     <span style="color:var(--text-secondary); font-size:0.9rem;">
-                                        <i class='bx bx-calendar'></i> ${a.date} &nbsp;
-                                        <i class='bx bx-time'></i> ${a.time}
+                                        <i class='bx bx-calendar'></i> ${escapeHtml(a.date)} &nbsp;
+                                        <i class='bx bx-time'></i> ${escapeHtml(a.time)}
                                     </span>
+                                    ${specialty}
                                 </div>
                                 <span style="background:${statusColor}22; color:${statusColor}; padding:3px 10px;
                                     border-radius:20px; font-size:0.8rem; font-weight:600; text-transform:uppercase;">
-                                    ${a.status}
+                                    ${escapeHtml(a.status)}
                                 </span>
                             </div>
-                            ${a.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${a.reason}</p>` : ""}
+                            ${a.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${escapeHtml(a.reason)}</p>` : ""}
                         </div>`;
                 });
             } catch (err) {

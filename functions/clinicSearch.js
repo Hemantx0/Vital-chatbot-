@@ -131,6 +131,30 @@ function buildMapsUrl(lat, lng) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
+function formatCoordinateForId(value) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed.toFixed(5) : "na";
+}
+
+function normalizeIdPart(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w.-]/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function buildStableClinicId({ source, providerId, lat, lng }) {
+  const normalizedSource = normalizeIdPart(source) || "unknown";
+  const normalizedProviderId = normalizeIdPart(providerId);
+  if (normalizedProviderId) {
+    return `${normalizedSource}_${normalizedProviderId}`;
+  }
+
+  return `${normalizedSource}_${formatCoordinateForId(lat)}_${formatCoordinateForId(lng)}`;
+}
+
 function buildAddressFromTags(tags = {}) {
   const parts = [
     tags["addr:housenumber"],
@@ -439,8 +463,10 @@ function normalizeOSMElements(elements, coordinates, stage) {
       mapsUrl: buildMapsUrl(point.lat, point.lng),
       source: "openstreetmap",
       placeId: `${element.type || "element"}:${element.id || `${point.lat},${point.lng}`}`,
-      latitude: point.lat,
-      longitude: point.lng,
+      providerId: element.id || `${point.lat},${point.lng}`,
+      providerType: element.type || "element",
+      lat: point.lat,
+      lng: point.lng,
       searchStage: stage,
       category,
       rawSearchText: [
@@ -457,7 +483,7 @@ function dedupeResults(results) {
   const bestByKey = new Map();
 
   for (const result of results) {
-    const key = normalizeText(`${result.name}|${result.address || `${result.latitude},${result.longitude}`}`)
+    const key = normalizeText(`${result.name}|${result.address || `${result.lat},${result.lng}`}`)
       .replace(/\b(clinic|hospital|doctor|dr|nearby)\b/g, "")
       .trim();
     const existing = bestByKey.get(key);
@@ -511,8 +537,14 @@ function normalizeResults(results, specialist) {
       })
   )
     .slice(0, FALLBACK_LIMIT)
-    .map(({ latitude, longitude, category, rawSearchText, ...result }) => ({
+    .map(({ category, rawSearchText, ...result }) => ({
       ...result,
+      clinicId: buildStableClinicId({
+        source: result.source,
+        providerId: result.providerId || result.placeId,
+        lat: result.lat,
+        lng: result.lng
+      }),
       distanceKm: typeof result.distanceKm === "number" ? Number(result.distanceKm.toFixed(1)) : null,
       matchType: getKeywordMatchCount(`${result.name} ${result.address} ${category} ${rawSearchText}`, specialist) > 0
         ? "exact_specialist"
@@ -592,17 +624,42 @@ function fallbackLocalSearch({ specialist, coordinates }) {
       reviewCount: clinic.reviewCount || 0,
       openNow: clinic.status === "Open",
       phone: clinic.phone || "",
-      mapsUrl: "",
-      source: "fallback_local"
+      mapsUrl: buildMapsUrl(clinic.lat, clinic.lng),
+      source: "fallback_local",
+      lat: clinic.lat,
+      lng: clinic.lng
     }))
     .sort((a, b) => a.distanceKm - b.distanceKm)
     .slice(0, FALLBACK_LIMIT)
     .map((clinic) => ({
+      clinicId: buildStableClinicId({
+        source: "fallback_local",
+        providerId: clinic.id,
+        lat: clinic.lat,
+        lng: clinic.lng
+      }),
       ...clinic,
+      lat: clinic.lat,
+      lng: clinic.lng,
       distanceKm: Number(clinic.distanceKm.toFixed(1))
     }));
 
   return clinics;
+}
+
+function attachClinicContext(clinics, specialist, resolvedLocation) {
+  return (clinics || []).map((clinic) => ({
+    ...clinic,
+    clinicId: clinic.clinicId || buildStableClinicId({
+      source: clinic.source,
+      providerId: clinic.providerId || clinic.placeId,
+      lat: clinic.lat,
+      lng: clinic.lng
+    }),
+    source: clinic.source || "unknown",
+    specialtyMatched: specialist,
+    searchContext: resolvedLocation || ""
+  }));
 }
 
 async function findNearbyClinics({ specialist, locationText, lat, lng, radius, city, state }) {
@@ -668,21 +725,26 @@ async function findNearbyClinics({ specialist, locationText, lat, lng, radius, c
   });
 
   if (osmSearch.results.length > 0) {
+    const clinics = attachClinicContext(osmSearch.results, specialist, coordinates.resolvedLocation);
     return buildSearchResponse({
       success: true,
       specialist,
       resolvedLocation: coordinates.resolvedLocation,
       coordinates,
       searchRadiusUsed,
-      clinics: osmSearch.results,
-      message: `I found ${osmSearch.results.length} nearby ${specialist.toLowerCase()} options.`,
+      clinics,
+      message: `I found ${clinics.length} nearby ${specialist.toLowerCase()} options.`,
       fallbackUsed: false,
       source: "openstreetmap"
     });
   }
 
   if (osmSearch.error) {
-    const fallbackClinicsList = fallbackLocalSearch({ specialist, coordinates });
+    const fallbackClinicsList = attachClinicContext(
+      fallbackLocalSearch({ specialist, coordinates }),
+      specialist,
+      coordinates.resolvedLocation
+    );
     if (fallbackClinicsList.length > 0) {
       return buildSearchResponse({
         success: true,
