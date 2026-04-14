@@ -1,10 +1,11 @@
 import {
-  collection, getDocs, updateDoc, getDoc,
+  collection, getDocs, getDoc,
   doc, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { db, auth } from "./firebase.js";
 import { escapeHtml, getAppointmentStatusMeta } from "./ui-utils.js";
+import { updateAppointmentStatus } from "./appointment-api.js";
 
 const ADMIN_EMAILS = ["admin@vitalchat.com"];
 
@@ -46,21 +47,35 @@ function isPermissionError(error) {
 }
 
 function renderAppointmentActions(appointmentId, status) {
-  if (status === "confirmed" || status === "cancelled") {
+  if (status === "pending") {
     return `
-      <span style="color:#94a3b8; font-size:0.82rem; font-weight:600;">
-        Finalized
-      </span>
+      <button onclick="updateStatus('${appointmentId}','confirmed')"
+        style="padding:4px 10px; background:#16a34a; color:#fff; border:none;
+        border-radius:6px; cursor:pointer; font-size:0.8rem;">Confirm</button>
+      <button onclick="updateStatus('${appointmentId}','rejected')"
+        style="padding:4px 10px; background:#dc2626; color:#fff; border:none;
+        border-radius:6px; cursor:pointer; font-size:0.8rem;">Reject</button>
+      <button onclick="updateStatus('${appointmentId}','cancelled')"
+        style="padding:4px 10px; background:#ef4444; color:#fff; border:none;
+        border-radius:6px; cursor:pointer; font-size:0.8rem;">Cancel</button>
+    `;
+  }
+
+  if (status === "confirmed") {
+    return `
+      <button onclick="updateStatus('${appointmentId}','completed')"
+        style="padding:4px 10px; background:#2563eb; color:#fff; border:none;
+        border-radius:6px; cursor:pointer; font-size:0.8rem;">Complete</button>
+      <button onclick="updateStatus('${appointmentId}','cancelled')"
+        style="padding:4px 10px; background:#ef4444; color:#fff; border:none;
+        border-radius:6px; cursor:pointer; font-size:0.8rem;">Cancel</button>
     `;
   }
 
   return `
-    <button onclick="updateStatus('${appointmentId}','confirmed')"
-      style="padding:4px 10px; background:#16a34a; color:#fff; border:none;
-      border-radius:6px; cursor:pointer; font-size:0.8rem;">Confirm</button>
-    <button onclick="updateStatus('${appointmentId}','cancelled')"
-      style="padding:4px 10px; background:#ef4444; color:#fff; border:none;
-      border-radius:6px; cursor:pointer; font-size:0.8rem;">Cancel</button>
+    <span style="color:#94a3b8; font-size:0.82rem; font-weight:600;">
+      Finalized
+    </span>
   `;
 }
 
@@ -103,7 +118,7 @@ async function updateStats() {
 
 window.updateStatus = async function(appointmentId, newStatus) {
   try {
-    await updateDoc(doc(db, "appointments", appointmentId), { status: newStatus });
+    await updateAppointmentStatus({ appointmentId, status: newStatus });
     showToast(`Appointment ${newStatus}.`, "success");
     await Promise.all([loadAllAppointments(), updateStats()]);
   } catch (err) {
@@ -123,6 +138,7 @@ window.markChatReviewed = async function(chatId) {
 
 async function loadAllAppointments() {
   const tbody = document.getElementById("appointments-tbody");
+  const statusFilter = document.getElementById("appointment-status-filter");
   if (!tbody) return;
 
   tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">Loading appointments...</td></tr>';
@@ -140,15 +156,22 @@ async function loadAllAppointments() {
     snap.forEach(d => {
       const a = d.data();
       const appointmentStatus = a.status || "pending";
+      if (statusFilter && statusFilter.value !== "all" && appointmentStatus !== statusFilter.value) {
+        return;
+      }
       const statusMeta = getAppointmentStatusMeta(appointmentStatus);
       const clinicName = a.clinic?.name || a.hospitalName || "-";
       const specialty = a.specialty ? `<div style="margin-top:0.35rem; color:#2563eb; font-size:0.8rem;">${escapeHtml(a.specialty)}</div>` : "";
+      const createdAt = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString() : "";
       tbody.innerHTML += `
         <tr>
           <td>${escapeHtml(a.patientName || 'Unknown')}</td>
           <td>${escapeHtml(a.patientEmail || '-')}</td>
           <td>${escapeHtml(clinicName)}${specialty}</td>
-          <td>${escapeHtml(`${a.date || '-'} ${a.time || ''}`.trim())}</td>
+          <td>
+            ${escapeHtml(`${a.appointmentDate || a.date || '-'} ${a.slotTime || a.time || ''}`.trim())}
+            ${createdAt ? `<div style="margin-top:0.35rem; color:#94a3b8; font-size:0.78rem;">Booked ${escapeHtml(createdAt)}</div>` : ""}
+          </td>
           <td>
             <span style="background:${statusMeta.color}22; color:${statusMeta.color};
               padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
@@ -160,6 +183,10 @@ async function loadAllAppointments() {
           </td>
         </tr>`;
     });
+
+    if (!tbody.innerHTML.trim()) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No appointments match this status.</td></tr>';
+    }
   } catch (err) {
     if (isPermissionError(err)) {
       tbody.innerHTML = `
@@ -243,6 +270,13 @@ function showAccessDenied() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const statusFilter = document.getElementById("appointment-status-filter");
+  if (statusFilter) {
+    statusFilter.addEventListener("change", () => {
+      loadAllAppointments();
+    });
+  }
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = 'login.html';

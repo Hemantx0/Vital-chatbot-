@@ -110,6 +110,8 @@
         import { auth } from "./js/firebase.js";
         import { collection, getDocs, query, where, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         import { db } from "./js/firebase.js";
+        import { updateAppointmentStatus } from "./js/appointment-api.js";
+        import { getAppointmentStatusMeta, canUserCancelAppointment } from "./js/ui-utils.js";
 
         const ADMIN_EMAILS = ["admin@vitalchat.com"];
 
@@ -169,29 +171,51 @@
                 listEl.innerHTML = "";
                 snap.forEach(docSnap => {
                     const a = docSnap.data();
-                    const statusColor = a.status === "confirmed" ? "#16a34a" : a.status === "cancelled" ? "#ef4444" : "#f59e0b";
+                    const statusMeta = getAppointmentStatusMeta(a.status);
                     const clinicName = a.clinic?.name || a.hospitalName || "Clinic not available";
                     const specialty = a.specialty
                         ? `<p style="margin:0.35rem 0 0; color:var(--primary); font-size:0.85rem;">${escapeHtml(a.specialty)}</p>`
                         : "";
+                    const createdAt = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString() : "";
+                    const cancelAction = canUserCancelAppointment(a)
+                        ? `<button class="btn-outline dashboard-cancel-btn" data-id="${docSnap.id}" style="margin-top:0.9rem;">Cancel Appointment</button>`
+                        : "";
                     listEl.innerHTML += `
-                        <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusColor};">
+                        <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusMeta.color};">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem;">
                                 <div>
                                     <strong style="font-size:1rem;">${escapeHtml(clinicName)}</strong><br>
                                     <span style="color:var(--text-secondary); font-size:0.9rem;">
-                                        <i class='bx bx-calendar'></i> ${escapeHtml(a.date)} &nbsp;
-                                        <i class='bx bx-time'></i> ${escapeHtml(a.time)}
+                                        <i class='bx bx-calendar'></i> ${escapeHtml(a.appointmentDate || a.date)} &nbsp;
+                                        <i class='bx bx-time'></i> ${escapeHtml(a.slotTime || a.time)}
                                     </span>
                                     ${specialty}
                                 </div>
-                                <span style="background:${statusColor}22; color:${statusColor}; padding:3px 10px;
+                                <span style="background:${statusMeta.color}22; color:${statusMeta.color}; padding:3px 10px;
                                     border-radius:20px; font-size:0.8rem; font-weight:600; text-transform:uppercase;">
-                                    ${escapeHtml(a.status)}
+                                    ${escapeHtml(statusMeta.label)}
                                 </span>
                             </div>
                             ${a.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${escapeHtml(a.reason)}</p>` : ""}
+                            ${createdAt ? `<p style="margin:0.45rem 0 0; color:var(--text-muted); font-size:0.82rem;">Booked on ${escapeHtml(createdAt)}</p>` : ""}
+                            ${cancelAction}
                         </div>`;
+                });
+
+                listEl.querySelectorAll(".dashboard-cancel-btn").forEach((button) => {
+                    button.addEventListener("click", async () => {
+                        try {
+                            await updateAppointmentStatus({
+                                appointmentId: button.dataset.id,
+                                status: "cancelled"
+                            });
+                            button.disabled = true;
+                            button.textContent = "Cancelled";
+                            window.location.reload();
+                        } catch (error) {
+                            alert(error.message || "Unable to cancel appointment.");
+                        }
+                    });
                 });
             } catch (err) {
                 listEl.innerHTML = `<p style="color:#ef4444;">Could not load appointments: ${err.message}</p>`;

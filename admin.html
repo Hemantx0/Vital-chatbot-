@@ -124,6 +124,16 @@
 
         <section class="admin-section">
             <h2><i class='bx bx-calendar-check'></i> Appointment Review</h2>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
+                <select id="appointment-status-filter" style="padding:0.65rem 0.9rem; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-surface);">
+                    <option value="all">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
+                </select>
+            </div>
             <table class="admin-table">
                 <thead>
                     <tr>

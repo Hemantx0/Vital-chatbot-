@@ -2,6 +2,11 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const { initializeApp } = require("firebase-admin/app");
 const { findNearbyClinics: findNearbyClinicsService } = require("./clinicSearch");
+const {
+  getClinicSlotsForRequest,
+  createAppointmentBooking,
+  updateAppointmentStatusForRequest
+} = require("./appointmentBooking");
 
 initializeApp();
 
@@ -517,6 +522,66 @@ exports.findNearbyClinics = onCall(
     } catch (error) {
       logger.error("Clinic search failed.", error);
       throw new HttpsError("internal", "Unable to search clinics right now.");
+    }
+  }
+);
+
+exports.getClinicSlots = onCall(
+  {
+    region: "asia-south1",
+    timeoutSeconds: 60,
+    memory: "256MiB"
+  },
+  async (request) => {
+    try {
+      return await getClinicSlotsForRequest(request);
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      logger.error("Loading clinic slots failed.", error);
+      throw new HttpsError("internal", "Unable to load clinic slots right now.");
+    }
+  }
+);
+
+exports.bookAppointment = onCall(
+  {
+    region: "asia-south1",
+    timeoutSeconds: 60,
+    memory: "256MiB"
+  },
+  async (request) => {
+    try {
+      return await createAppointmentBooking(request);
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      logger.error("Appointment booking failed.", error);
+      throw new HttpsError("internal", "Unable to book the appointment right now.");
+    }
+  }
+);
+
+exports.updateAppointmentStatus = onCall(
+  {
+    region: "asia-south1",
+    timeoutSeconds: 60,
+    memory: "256MiB"
+  },
+  async (request) => {
+    try {
+      return await updateAppointmentStatusForRequest(request);
+    } catch (error) {
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      logger.error("Updating appointment status failed.", error);
+      throw new HttpsError("internal", "Unable to update the appointment right now.");
     }
   }
 );

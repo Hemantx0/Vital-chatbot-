@@ -1,11 +1,12 @@
 import {
-  collection, addDoc, getDocs,
-  query, where, orderBy, Timestamp
+  collection, getDocs,
+  query, where, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { auth, db } from "./firebase.js";
 import { clinics as fallbackClinics } from "./clinic-data.js";
-import { escapeHtml, getAppointmentStatusMeta } from "./ui-utils.js";
+import { bookAppointment, getClinicSlots, updateAppointmentStatus } from "./appointment-api.js";
+import { escapeHtml, getAppointmentStatusMeta, canUserCancelAppointment } from "./ui-utils.js";
 import { getSelectedClinic, normalizeClinic, saveSelectedClinic } from "./clinic-utils.js";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -93,6 +94,59 @@ function getSelectedClinicForBooking(clinicId) {
     || (selectedClinic?.clinicId === clinicId ? selectedClinic : null)
     || selectedClinic
     || null;
+}
+
+function getBookingSource(clinic) {
+  if (clinic?.searchContext || clinic?.specialtyMatched) {
+    return "chatbot_recommendation";
+  }
+
+  return clinic?.source === "fallback_local" ? "featured_clinic" : "direct_booking";
+}
+
+async function loadAvailableSlots(clinic, appointmentDate) {
+  const timeSelect = document.getElementById("appt-time");
+  const slotNote = document.getElementById("appt-slot-note");
+  if (!timeSelect || !slotNote) return;
+
+  timeSelect.innerHTML = '<option value="">Loading slots...</option>';
+  timeSelect.disabled = true;
+  slotNote.textContent = "Checking live slot availability...";
+
+  if (!appointmentDate) {
+    timeSelect.innerHTML = '<option value="">Select a date first</option>';
+    slotNote.textContent = "Choose a date to load available slots.";
+    return;
+  }
+
+  try {
+    const result = await getClinicSlots({
+      clinic,
+      appointmentDate
+    });
+
+    const slots = Array.isArray(result?.slots) ? result.slots : [];
+    if (slots.length === 0) {
+      timeSelect.innerHTML = '<option value="">No slots available</option>';
+      timeSelect.disabled = true;
+      slotNote.textContent = "No available slots for this date. Please choose another date.";
+      return;
+    }
+
+    timeSelect.innerHTML = '<option value="">Select a time slot</option>';
+    slots.forEach((slot) => {
+      const option = document.createElement("option");
+      option.value = slot.slotId;
+      option.textContent = `${slot.slotTime} (${slot.capacity - slot.bookedCount} left)`;
+      timeSelect.appendChild(option);
+    });
+    timeSelect.disabled = false;
+    slotNote.textContent = `${slots.length} slots available for this date.`;
+  } catch (error) {
+    timeSelect.innerHTML = '<option value="">Unable to load slots</option>';
+    timeSelect.disabled = true;
+    slotNote.textContent = error.message || "Unable to load available slots right now.";
+  }
 }
 
 function renderBookingContext() {
@@ -204,11 +258,11 @@ window.saveAppointment = async function(clinicId) {
   }
 
   const date = document.getElementById("appt-date").value;
-  const time = document.getElementById("appt-time").value;
+  const slotId = document.getElementById("appt-time").value;
   const reason = document.getElementById("appt-reason").value;
 
-  if (!date || !time) {
-    alert("Please select a date and time.");
+  if (!date || !slotId) {
+    alert("Please select a date and available slot.");
     return;
   }
 
@@ -221,31 +275,19 @@ window.saveAppointment = async function(clinicId) {
   const specialty = selectedSpecialty || clinic.specialtyMatched || "General consultation";
 
   try {
-    await addDoc(collection(db, "appointments"), {
-      userId: user.uid,
-      patientName: user.displayName || user.email,
-      patientEmail: user.email,
-      hospitalName: clinic.name,
-      clinicId: clinic.clinicId,
-      clinic: {
-        clinicId: clinic.clinicId,
-        source: clinic.source,
-        name: clinic.name,
-        address: clinic.address,
-        lat: clinic.lat,
-        lng: clinic.lng,
-        mapsUrl: clinic.mapsUrl
-      },
+    const response = await bookAppointment({
+      clinic,
+      appointmentDate: date,
+      slotId,
       specialty,
-      date,
-      time,
-      reason: reason || `Consultation for ${specialty}`,
-      status: "pending",
-      createdAt: Timestamp.now()
+      reason,
+      bookingSource: getBookingSource(clinic),
+      patientName: user.displayName || user.email,
+      patientEmail: user.email
     });
 
     saveSelectedClinic(clinic);
-    alert("Appointment booked successfully! You will receive a confirmation soon.");
+    alert(`Appointment booked successfully for ${response.slotTime}. You will receive a confirmation soon.`);
     document.getElementById("appt-date").value = "";
     document.getElementById("appt-time").value = "";
     document.getElementById("appt-reason").value = "";
@@ -324,16 +366,10 @@ window.openBookingModal = function(clinicId) {
         <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Preferred Time</label>
         <select id="appt-time"
           style="width:100%; padding:0.75rem; border:1px solid var(--border-color);
-          border-radius:var(--radius-md); font-family:inherit; outline:none; background:var(--bg-surface);">
-          <option value="">Select a time slot</option>
-          <option>09:00 AM</option><option>09:30 AM</option>
-          <option>10:00 AM</option><option>10:30 AM</option>
-          <option>11:00 AM</option><option>11:30 AM</option>
-          <option>12:00 PM</option><option>02:00 PM</option>
-          <option>02:30 PM</option><option>03:00 PM</option>
-          <option>03:30 PM</option><option>04:00 PM</option>
-          <option>04:30 PM</option><option>05:00 PM</option>
+          border-radius:var(--radius-md); font-family:inherit; outline:none; background:var(--bg-surface);" disabled>
+          <option value="">Select a date first</option>
         </select>
+        <p id="appt-slot-note" style="margin:0.45rem 0 0; color:var(--text-secondary); font-size:0.85rem;">Choose a date to load available slots.</p>
       </div>
       <div style="margin-bottom:1.5rem;">
         <label style="display:block; font-weight:600; margin-bottom:0.4rem;">Reason / Symptoms</label>
@@ -350,6 +386,28 @@ window.openBookingModal = function(clinicId) {
     </div>
   `;
   modal.style.display = "flex";
+
+  const dateInput = document.getElementById("appt-date");
+  if (dateInput) {
+    dateInput.addEventListener("change", () => {
+      loadAvailableSlots(clinic, dateInput.value);
+    });
+    dateInput.value = today;
+    loadAvailableSlots(clinic, today);
+  }
+};
+
+window.cancelAppointment = async function(appointmentId) {
+  try {
+    await updateAppointmentStatus({
+      appointmentId,
+      status: "cancelled"
+    });
+    alert("Appointment cancelled successfully.");
+    window.loadMyAppointments();
+  } catch (error) {
+    alert(error.message || "Unable to cancel appointment.");
+  }
 };
 
 window.loadMyAppointments = async function() {
@@ -382,6 +440,12 @@ window.loadMyAppointments = async function() {
         const specialty = appointment.specialty
           ? `<p style="margin:0.35rem 0 0; color:var(--primary); font-size:0.85rem;">${escapeHtml(appointment.specialty)}</p>`
           : "";
+        const createdAt = appointment.createdAt?.toDate
+          ? appointment.createdAt.toDate().toLocaleString()
+          : "";
+        const cancelAction = canUserCancelAppointment(appointment)
+          ? `<button class="btn-outline" style="margin-top:0.85rem;" onclick="cancelAppointment('${docSnap.id}')">Cancel Appointment</button>`
+          : "";
 
         listEl.innerHTML += `
           <div class="glass-card" style="padding:1.25rem; margin-bottom:1rem; border-left:4px solid ${statusMeta.color};">
@@ -400,6 +464,8 @@ window.loadMyAppointments = async function() {
               </span>
             </div>
             ${appointment.reason ? `<p style="margin:0.5rem 0 0; color:var(--text-secondary); font-size:0.9rem;">${escapeHtml(appointment.reason)}</p>` : ""}
+            ${createdAt ? `<p style="margin:0.45rem 0 0; color:var(--text-muted); font-size:0.82rem;">Booked on ${escapeHtml(createdAt)}</p>` : ""}
+            ${cancelAction}
           </div>`;
       });
     } catch (err) {
