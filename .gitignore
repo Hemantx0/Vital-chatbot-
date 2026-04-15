@@ -22,4 +22,36 @@ firestore-debug.log
 ui-debug.log
 functions-emulator.out.log
 functions-emulator.err.log
-firebase-debug.log
+
+# Firebase local and emulator state
+.firebase/
+.firebaserc.local
+firebase-export-*/
+*.firebase.log
+.runtimeconfig.json
+functions/.runtimeconfig.json
+
+# Build artifacts and caches
+dist/
+build/
+coverage/
+.cache/
+.tmp/
+tmp/
+temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Miscellaneous local-only files
+*.bak
+*.orig
