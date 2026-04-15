@@ -11,22 +11,22 @@ export function getAppointmentStatusMeta(status) {
   const normalizedStatus = String(status || "pending").toLowerCase();
 
   if (normalizedStatus === "confirmed") {
-    return { label: "confirmed", color: "#16a34a" };
+    return { label: "confirmed", color: "#16a34a", className: "status-badge status-badge--confirmed" };
   }
 
   if (normalizedStatus === "rejected") {
-    return { label: "rejected", color: "#dc2626" };
+    return { label: "rejected", color: "#dc2626", className: "status-badge status-badge--rejected" };
   }
 
   if (normalizedStatus === "cancelled") {
-    return { label: "cancelled", color: "#ef4444" };
+    return { label: "cancelled", color: "#ef4444", className: "status-badge status-badge--cancelled" };
   }
 
   if (normalizedStatus === "completed") {
-    return { label: "completed", color: "#2563eb" };
+    return { label: "completed", color: "#2563eb", className: "status-badge status-badge--completed" };
   }
 
-  return { label: "pending", color: "#f59e0b" };
+  return { label: "pending", color: "#f59e0b", className: "status-badge status-badge--pending" };
 }
 
 export function isFutureAppointment(appointment) {

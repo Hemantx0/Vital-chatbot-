@@ -63,29 +63,37 @@
         </div>
 
         <div class="hero-content">
-            <span class="badge"><i class='bx bx-chip'></i> AI-Powered Health Platform</span>
-            <h1>Discover <span class="highlight">Exceptional Care</span> <br>Nearest To You</h1>
-            <p>Describe your symptoms to our intelligent AI, or seamlessly search for top-rated local clinics and hospitals and book instantly.</p>
+            <span class="badge"><i class='bx bx-chip'></i> AI symptom guidance, clinic discovery, and booking</span>
+            <h1>Describe symptoms, <span class="highlight">find nearby care</span>, and book with confidence</h1>
+            <p>
+                Vital Chat helps patients describe symptoms, receive structured specialist guidance, discover nearby clinics by location,
+                and continue into slot-based appointment booking without losing context.
+            </p>
             
             <div class="search-bar-wrapper">
                 <form class="hero-search" action="clinics.html" method="GET">
                     <div class="search-input">
                         <i class='bx bx-search'></i>
-                        <input type="text" placeholder="Specialty e.g. 'Cardiologist' or 'Dental'" name="query">
+                        <input type="text" placeholder="Search specialty e.g. 'Cardiologist' or 'Dental'" name="query">
                     </div>
-                    <div class="search-input location-input">
-                        <i class='bx bx-map'></i>
-                        <input type="text" placeholder="Your location" name="location">
-                        <button type="button" class="geo-btn" title="Use my location"><i class='bx bx-current-location'></i></button>
-                    </div>
-                    <button type="submit" class="btn-primary search-btn">Search</button>
+                    <button type="submit" class="btn-primary search-btn">Find Care</button>
                 </form>
+                <div class="search-helper-note">
+                    <i class='bx bx-info-circle'></i>
+                    <span>Search by specialty to continue into clinic discovery and booking.</span>
+                </div>
+            </div>
+
+            <div class="hero-trust-strip">
+                <span class="chip"><i class='bx bx-check-shield'></i> Structured AI guidance</span>
+                <span class="chip chip--secondary"><i class='bx bx-map-pin'></i> Nearby clinic discovery</span>
+                <span class="chip chip--neutral"><i class='bx bx-calendar-check'></i> Slot-based booking</span>
             </div>
 
             <div class="hero-stats">
-                <div class="stat"><span class="number">1K+</span><span class="label">Clinics</span></div>
-                <div class="stat"><span class="number">24/7</span><span class="label">AI Assistant</span></div>
-                <div class="stat"><span class="number">50K+</span><span class="label">Patients</span></div>
+                <div class="stat"><span class="number">Step 1</span><span class="label">Describe symptoms naturally</span></div>
+                <div class="stat"><span class="number">Step 2</span><span class="label">Get specialist guidance</span></div>
+                <div class="stat"><span class="number">Step 3</span><span class="label">Book a nearby slot</span></div>
             </div>
         </div>
         
@@ -99,9 +107,10 @@
                     </div>
                 </div>
                 <div class="mockup-chat">
-                    <div class="msg bot">Hi! What are your symptoms today?</div>
-                    <div class="msg user">I have a fever and sore throat.</div>
-                    <div class="msg bot typing">Finding nearest clinics...</div>
+                    <div class="msg bot">Tell me your symptoms or the specialist you need.</div>
+                    <div class="msg user">I have fever, headache, and a sore throat.</div>
+                    <div class="msg bot">Summary: fever, headache, sore throat. Recommended specialist: General Physician.</div>
+                    <div class="msg bot typing">Please enter your location to find nearby clinics.</div>
                 </div>
                 <a href="chatbot.html" class="btn-glow">Open AI Assistant</a>
             </div>
@@ -151,43 +160,59 @@
         </div>
     </div>
 
-    <!-- Features Section placeholder -->
-    <section class="features">
-        <div class="feature-card">
-            <i class='bx bx-heart-circle'></i>
-            <h3>Smart Symptom Match</h3>
-            <p>Our AI analyzes symptoms to find the ideal specialty.</p>
+    <section class="features home-capabilities">
+        <div class="section-header">
+            <h2>Built around the real care journey</h2>
+            <p>The landing experience now reflects what the product actually does after a patient starts chatting.</p>
         </div>
         <div class="feature-card">
-            <i class='bx bx-calendar-check'></i>
-            <h3>Instant Booking</h3>
-            <p>See real-time availability and confirm your slot instantly.</p>
+            <i class='bx bx-bot'></i>
+            <h3>AI Symptom Guidance</h3>
+            <p>Patients describe symptoms in natural language and receive a structured summary, urgency guidance, and next steps.</p>
+        </div>
+        <div class="feature-card">
+            <i class='bx bx-user-pin'></i>
+            <h3>Specialist Recommendation</h3>
+            <p>The assistant identifies the most relevant specialist before handing the patient into the clinic discovery flow.</p>
         </div>
         <div class="feature-card">
             <i class='bx bx-map-alt'></i>
-            <h3>Location Based</h3>
-            <p>Integrated with Google Maps to find the absolute nearest care.</p>
+            <h3>Location-Based Discovery</h3>
+            <p>Nearby clinics are surfaced with location context so the transition from advice to action feels immediate and useful.</p>
+        </div>
+        <div class="feature-card">
+            <i class='bx bx-calendar-check'></i>
+            <h3>Slot-Based Booking</h3>
+            <p>Patients continue into appointment booking with the selected clinic already carried forward into the scheduler.</p>
         </div>
     </section>
 
-    <!-- Featured Care Section -->
-    <section class="map-section">
+    <section class="home-flow-section">
         <div class="section-header">
-            <h2>Featured Care in <span class="highlight">Jaipur</span></h2>
-            <p>Browse trusted nearby hospitals and clinics selected from our shared care directory.</p>
+            <h2>How the platform works</h2>
+            <p>A simple, guided path from first symptoms to confirmed care.</p>
         </div>
-        <div class="featured-care-shell">
-            <div class="featured-care-intro">
-                <span class="mini-badge"><i class='bx bx-shield-quarter'></i> Verified directory highlights</span>
-                <h3>Top-rated options patients can discover instantly</h3>
-                <p>
-                    Instead of showing an empty map, this section now highlights real care providers from your project data.
-                    It gives visitors a quick view of ratings, availability, and specialties before they open the assistant
-                    or continue to booking.
-                </p>
-                <a href="clinics.html" class="btn-primary">Explore All Clinics</a>
-            </div>
-            <div class="featured-care-grid" id="featured-care-grid"></div>
+        <div class="home-flow-grid">
+            <article class="home-flow-card">
+                <span>01</span>
+                <h3>Describe symptoms</h3>
+                <p>Start with everyday language like “fever and sore throat” or “I need a dentist.”</p>
+            </article>
+            <article class="home-flow-card">
+                <span>02</span>
+                <h3>Review AI guidance</h3>
+                <p>See a symptom summary, possible conditions, urgency level, and recommended specialist.</p>
+            </article>
+            <article class="home-flow-card">
+                <span>03</span>
+                <h3>Share your location</h3>
+                <p>Enter an area or use live location to search nearby clinics relevant to the recommendation.</p>
+            </article>
+            <article class="home-flow-card">
+                <span>04</span>
+                <h3>Book an appointment</h3>
+                <p>Continue into slot-based booking with the selected clinic and care context preserved.</p>
+            </article>
         </div>
     </section>
 
@@ -199,7 +224,7 @@
             <p>Empowering patients with intelligent healthcare solutions.</p>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 Vital Chat Health. Devloped by Akarsh, Hemant & Team</p>
+            <p>&copy; 2026 Vital Chat Health. Devloped by Hemant</p>
         </div>
     </footer>
 
@@ -207,7 +232,6 @@
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/chatbot.js"></script>
     <script type="module" src="js/home-auth.js"></script>
-    <script type="module" src="js/home-highlights.js"></script>
     <script src="js/interactive-bg.js"></script>
 </body>
 </html>

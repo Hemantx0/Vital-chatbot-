@@ -4,50 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Dashboard - Vital Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/app-pages.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <style>
-        .dashboard-container {
-            padding: 8rem 5% 4rem;
-            min-height: 100vh;
-        }
-        .welcome-header { margin-bottom: 2rem; }
-        .welcome-header h1 { font-size: 2.5rem; color: var(--primary-dark); }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-        .dash-card {
-            background: var(--bg-surface);
-            padding: 2rem;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md);
-            text-align: center;
-            transition: var(--transition);
-        }
-        .dash-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
-        .dash-card i { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
-        .dash-card h3 { margin-bottom: 0.5rem; }
-        .dash-card p { color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem; }
-        .dash-card .btn-outline {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            box-shadow: var(--shadow-md);
-        }
-        .dash-card .btn-outline:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg), 0 0 20px rgba(37, 99, 235, 0.3);
-            background: linear-gradient(135deg, var(--primary-light), var(--primary));
-        }
-        .logout-btn { color: #ef4444 !important; font-weight: 600; cursor: pointer; }
-        .appointments-section { margin-top: 2rem; }
-        .appointments-section h2 { margin-bottom: 1rem; color: var(--primary-dark); }
-    </style>
 </head>
 <body>
     <header class="navbar">
@@ -64,46 +23,117 @@
         </div>
     </header>
 
-    <div class="dashboard-container">
-        <div class="welcome-header">
-            <h1>Welcome, <span id="user-name">...</span>!</h1>
-            <p>Manage your health journey.</p>
-        </div>
+    <main class="dashboard-container dashboard-shell">
+        <section class="dashboard-hero">
+            <div class="dashboard-hero-grid">
+                <div class="dashboard-hero-copy">
+                    <span class="page-kicker"><i class='bx bx-shield-quarter'></i> Patient Portal</span>
+                    <h1>Health overview for <span id="user-name">...</span></h1>
+                    <p>Track upcoming care, stay on top of appointment requests, and continue your booking journey from one clean patient dashboard.</p>
+                    <div class="assistant-chip-row" style="margin-top:18px;">
+                        <span class="chip"><i class='bx bx-calendar-check'></i> Appointments synced</span>
+                        <span class="chip chip--secondary"><i class='bx bx-bot'></i> AI assistant ready</span>
+                    </div>
+                </div>
+                <div class="hero-panel">
+                    <h3>Today's focus</h3>
+                    <div class="mini-stat-grid">
+                        <div>
+                            <div class="metric-card-note">Care access</div>
+                            <strong class="summary-hero-value">Book, review, and manage visits in one place</strong>
+                        </div>
+                        <div>
+                            <div class="metric-card-note">Next step</div>
+                            <strong class="summary-hero-value">Check your latest appointment status below</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div class="dashboard-grid">
-            <div class="dash-card">
-                <i class='bx bx-calendar'></i>
-                <h3>My Appointments</h3>
-                <p>View upcoming and past clinic visits.</p>
-                <a href="#my-appointments" class="btn-outline">View Below</a>
-            </div>
-            <div class="dash-card">
-                <i class='bx bx-plus-medical'></i>
-                <h3>Book Care</h3>
-                <p>Need to see a doctor? Book instantly.</p>
-                <a href="appointment.html" class="btn-primary">Book Now</a>
-            </div>
-            <div class="dash-card">
-                <i class='bx bx-map-alt'></i>
-                <h3>Find Clinics</h3>
-                <p>Find nearby healthcare facilities.</p>
-                <a href="clinics.html" class="btn-outline">Search</a>
-            </div>
-            <div class="dash-card" id="admin-review-card" style="display:none;">
-                <i class='bx bx-shield-quarter'></i>
-                <h3>Admin Review</h3>
-                <p>Review chatbot logs and appointment requests.</p>
-                <a href="admin.html" class="btn-outline">Open Panel</a>
-            </div>
-        </div>
+        <section class="metric-grid" id="dashboard-metrics">
+            <article class="metric-card">
+                <div class="metric-card-label"><i class='bx bx-time-five'></i> Upcoming</div>
+                <div class="metric-card-value" id="metric-upcoming">0</div>
+                <div class="metric-card-note">Future visits on your schedule</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-label"><i class='bx bx-loader-circle'></i> Pending</div>
+                <div class="metric-card-value" id="metric-pending">0</div>
+                <div class="metric-card-note">Awaiting clinic confirmation</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-label"><i class='bx bx-badge-check'></i> Confirmed</div>
+                <div class="metric-card-value" id="metric-confirmed">0</div>
+                <div class="metric-card-note">Ready for your visit</div>
+            </article>
+            <article class="metric-card">
+                <div class="metric-card-label"><i class='bx bx-check-shield'></i> Closed</div>
+                <div class="metric-card-value" id="metric-closed">0</div>
+                <div class="metric-card-note">Completed or cancelled bookings</div>
+            </article>
+        </section>
 
-        <div class="appointments-section" id="my-appointments">
-            <h2><i class='bx bx-calendar-check'></i> My Appointments</h2>
-            <div id="appointments-list">
+        <section class="dashboard-utility-grid">
+            <article class="dashboard-focus-card">
+                <span class="stage-kicker"><i class='bx bx-compass'></i> Patient Tools</span>
+                <h3>Continue your care journey without leaving the dashboard</h3>
+                <p>Start a new booking, search nearby clinics, or jump straight to your appointment list from one cleaner workspace.</p>
+                <div class="dashboard-focus-actions">
+                    <a href="appointment.html" class="btn-primary"><i class='bx bx-calendar-plus'></i> Book Care</a>
+                    <a href="clinics.html" class="btn-outline"><i class='bx bx-map-alt'></i> Find Clinics</a>
+                    <a href="#my-appointments" class="btn-ghost"><i class='bx bx-calendar-check'></i> View Schedule</a>
+                </div>
+            </article>
+
+            <div class="dashboard-support-stack">
+                <article class="dashboard-support-card">
+                    <h3>What you can manage here</h3>
+                    <div class="dashboard-support-list">
+                        <div class="dashboard-support-item">
+                            <div class="dashboard-support-icon"><i class='bx bx-time-five'></i></div>
+                            <div>
+                                <strong>Track status updates</strong>
+                                <p>See pending, confirmed, completed, and cancelled visits in one list.</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-support-item">
+                            <div class="dashboard-support-icon"><i class='bx bx-link-alt'></i></div>
+                            <div>
+                                <strong>Keep your booking flow</strong>
+                                <p>Continue from assistant-selected clinics without losing context.</p>
+                            </div>
+                        </div>
+                        <div class="dashboard-support-item">
+                            <div class="dashboard-support-icon"><i class='bx bx-check-shield'></i></div>
+                            <div>
+                                <strong>Review upcoming visits</strong>
+                                <p>Stay on top of your next appointment and any changes from the clinic.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="dashboard-support-card dashboard-support-card--admin" id="admin-review-card" style="display:none;">
+                    <h3>Admin access available</h3>
+                    <p>Open moderation tools for chatbot review and appointment operations.</p>
+                    <a href="admin.html" class="btn-outline">Open Admin Panel</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="dashboard-section appointments-section" id="my-appointments">
+            <div class="dashboard-section-header">
+                <div>
+                    <h2><i class='bx bx-calendar-check'></i> My Appointments</h2>
+                    <p>Your upcoming, pending, and past clinic bookings in one place.</p>
+                </div>
+            </div>
+            <div id="appointments-list" class="dashboard-appointments">
                 <p style="color:var(--text-secondary);">Loading your appointments...</p>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <script type="module" src="js/dashboard.js"></script>
     <script type="module" src="js/auth.js"></script>

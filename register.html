@@ -4,48 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Vital Chat Health</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8rem 5% 4rem;
-            background: var(--bg-main);
-        }
-        .auth-card {
-            background: var(--bg-surface);
-            padding: 3rem;
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-lg);
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid var(--border-color);
-        }
-        .auth-card h2 { text-align: center; margin-bottom: 0.5rem; color: var(--primary-dark); }
-        .auth-card p { text-align: center; color: var(--text-secondary); margin-bottom: 2rem; }
-        .form-group { margin-bottom: 1.25rem; }
-        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-primary); }
-        .form-group input {
-            width: 100%; padding: 0.75rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            outline: none; font-family: inherit;
-            transition: var(--transition);
-            box-sizing: border-box;
-        }
-        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.2); }
-        .error-msg { color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; display: none; }
-        .auth-btn { width: 100%; margin-top: 1rem; }
-        .auth-footer { text-align: center; margin-top: 1.5rem; font-size: 0.95rem; color: var(--text-secondary); }
-        .auth-footer a { color: var(--primary); font-weight: 600; }
-        #server-error { text-align: center; color: #ef4444; margin-bottom: 1rem; font-weight: 600; display: none; }
-    </style>
 </head>
-<body>
+<body class="auth-page">
     <header class="navbar">
         <a href="index.html" class="logo">
             <i class='bx bx-pulse'></i> Vital Chat

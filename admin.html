@@ -4,77 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Review - Vital Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <style>
-        .admin-container {
-            padding: 8rem 5% 4rem;
-            min-height: 100vh;
-        }
-        .admin-header {
-            margin-bottom: 2rem;
-        }
-        .admin-header h1 {
-            color: var(--primary-dark);
-            margin-bottom: 0.4rem;
-        }
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        .admin-stat {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-lg);
-            padding: 1.25rem;
-            box-shadow: var(--shadow-sm);
-        }
-        .admin-stat .value {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--primary-dark);
-        }
-        .admin-section {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            overflow-x: auto;
-        }
-        .admin-section h2 {
-            margin-bottom: 1rem;
-            color: var(--primary-dark);
-        }
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 850px;
-        }
-        .admin-table th, .admin-table td {
-            padding: 0.85rem;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
-            vertical-align: top;
-            font-size: 0.92rem;
-        }
-        .admin-table th {
-            color: var(--text-secondary);
-            font-weight: 700;
-            background: rgba(37, 99, 235, 0.03);
-        }
-        .admin-guard {
-            max-width: 720px;
-            margin: 10rem auto 0;
-            padding: 2rem;
-        }
-    </style>
 </head>
-<body>
+<body class="admin-page">
     <header class="navbar">
         <a href="index.html" class="logo">
             <i class='bx bx-pulse'></i> Vital Chat
@@ -98,77 +31,120 @@
     </div>
 
     <div id="admin-content" class="admin-container" style="display:none;">
-        <div class="admin-header">
-            <h1>Admin Review Panel</h1>
-            <p>Signed in as <strong id="admin-name">Admin</strong>.</p>
+        <div class="admin-shell">
+            <section class="admin-hero glass-card">
+                <div class="admin-hero-copy">
+                    <span class="page-kicker"><i class='bx bx-shield-quarter'></i> Operations Console</span>
+                    <h1>Admin Review Panel</h1>
+                    <p>Monitor appointments, review chatbot activity, and keep patient operations moving from one clean control surface.</p>
+                </div>
+                <div class="admin-hero-meta">
+                    <div class="admin-hero-chip">
+                        <i class='bx bx-user-circle'></i>
+                        <div>
+                            <span>Signed in as</span>
+                            <strong id="admin-name">Admin</strong>
+                        </div>
+                    </div>
+                    <div class="assistant-chip-row">
+                        <span class="chip"><i class='bx bx-calendar-check'></i> Appointment operations</span>
+                        <span class="chip chip--secondary"><i class='bx bx-bot'></i> Chat activity review</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="admin-stats">
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Total Appointments</div>
+                    <div class="value" id="stat-total">0</div>
+                </div>
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Pending</div>
+                    <div class="value" id="stat-pending">0</div>
+                </div>
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Confirmed</div>
+                    <div class="value" id="stat-confirmed">0</div>
+                </div>
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Completed</div>
+                    <div class="value" id="stat-completed">0</div>
+                </div>
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Cancelled / Rejected</div>
+                    <div class="value" id="stat-closed">0</div>
+                </div>
+                <div class="admin-stat glass-card">
+                    <div class="admin-stat-label">Chat Logs</div>
+                    <div class="value" id="stat-chats">0</div>
+                </div>
+            </div>
+
+            <section class="admin-section glass-card">
+                <div class="admin-section-head">
+                    <div>
+                        <h2><i class='bx bx-calendar-check'></i> Appointment Review</h2>
+                        <p>Scan booking requests quickly, filter by status, and move appointments through the care lifecycle.</p>
+                    </div>
+                    <div class="admin-toolbar">
+                        <label class="admin-filter">
+                            <span>Status Filter</span>
+                            <select id="appointment-status-filter">
+                                <option value="all">All statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="rejected">Rejected</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Email</th>
+                                <th>Clinic</th>
+                                <th>Date & Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointments-tbody">
+                            <tr><td colspan="6" style="color:#94a3b8;">Loading appointments...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-section glass-card">
+                <div class="admin-section-head">
+                    <div>
+                        <h2><i class='bx bx-bot'></i> Chatbot Log Review</h2>
+                        <p>Review symptom prompts, specialty suggestions, and conversation activity that may need admin attention.</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Specialty</th>
+                                <th>Input</th>
+                                <th>Bot Response</th>
+                                <th>Review Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="chatlogs-tbody">
+                            <tr><td colspan="6" style="color:#94a3b8;">Loading chat logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
-
-        <div class="admin-stats">
-            <div class="admin-stat">
-                <div style="color:var(--text-secondary);">Pending Appointments</div>
-                <div class="value" id="stat-pending">0</div>
-            </div>
-            <div class="admin-stat">
-                <div style="color:var(--text-secondary);">Confirmed Appointments</div>
-                <div class="value" id="stat-confirmed">0</div>
-            </div>
-            <div class="admin-stat">
-                <div style="color:var(--text-secondary);">Total Appointments</div>
-                <div class="value" id="stat-total">0</div>
-            </div>
-            <div class="admin-stat">
-                <div style="color:var(--text-secondary);">Chat Logs</div>
-                <div class="value" id="stat-chats">0</div>
-            </div>
-        </div>
-
-        <section class="admin-section">
-            <h2><i class='bx bx-calendar-check'></i> Appointment Review</h2>
-            <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
-                <select id="appointment-status-filter" style="padding:0.65rem 0.9rem; border:1px solid var(--border-color); border-radius:10px; background:var(--bg-surface);">
-                    <option value="all">All statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="completed">Completed</option>
-                </select>
-            </div>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Patient</th>
-                        <th>Email</th>
-                        <th>Clinic</th>
-                        <th>Date & Time</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="appointments-tbody">
-                    <tr><td colspan="6" style="color:#94a3b8;">Loading appointments...</td></tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section class="admin-section">
-            <h2><i class='bx bx-bot'></i> Chatbot Log Review</h2>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>User</th>
-                        <th>Specialty</th>
-                        <th>Input</th>
-                        <th>Bot Response</th>
-                        <th>Review Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="chatlogs-tbody">
-                    <tr><td colspan="6" style="color:#94a3b8;">Loading chat logs...</td></tr>
-                </tbody>
-            </table>
-        </section>
     </div>
 
     <script type="module" src="js/firebase.js"></script>
