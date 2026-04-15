@@ -1,3 +1,4 @@
+const logger = require("firebase-functions/logger");
 const fallbackClinics = require("./fallbackClinics");
 const { buildStableClinicId, normalizeClinicRecord } = require("./clinicRecords");
 const {
@@ -10,6 +11,26 @@ const {
   SELECTOR_BATCH_SIZE,
   specialistProfiles
 } = require("./clinicSearchProfiles");
+
+function createSearchError(kind, message, meta = {}) {
+  const error = new Error(message);
+  error.kind = kind;
+  error.meta = meta;
+  return error;
+}
+
+function isImmediateFallbackError(error) {
+  const kind = String(error?.kind || "").toLowerCase();
+  return kind === "rate_limit" || kind === "timeout" || kind === "upstream_unavailable";
+}
+
+function summarizeError(error) {
+  return {
+    message: error?.message || "Unknown error",
+    kind: error?.kind || "unknown",
+    ...error?.meta
+  };
+}
 
 function normalizeText(text) {
   return String(text || "")
@@ -83,15 +104,39 @@ async function geocodeWithNominatim(locationText) {
   url.searchParams.set("limit", "1");
   url.searchParams.set("q", locationText);
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "User-Agent": NOMINATIM_USER_AGENT
+  let response;
+  try {
+    response = await fetch(url, {
+      signal: AbortSignal.timeout(3000),
+      headers: {
+        Accept: "application/json",
+        "User-Agent": NOMINATIM_USER_AGENT
+      }
+    });
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      throw createSearchError("timeout", "Nominatim geocoding timed out.", {
+        service: "nominatim",
+        locationText
+      });
     }
-  });
+
+    throw createSearchError("upstream_unavailable", "Nominatim geocoding request failed.", {
+      service: "nominatim",
+      locationText
+    });
+  }
 
   if (!response.ok) {
-    throw new Error(`Nominatim geocoding failed (${response.status})`);
+    throw createSearchError(
+      response.status === 429 ? "rate_limit" : "upstream_unavailable",
+      `Nominatim geocoding failed (${response.status})`,
+      {
+        service: "nominatim",
+        status: response.status,
+        locationText
+      }
+    );
   }
 
   const results = await response.json();
@@ -221,21 +266,43 @@ async function fetchOverpassPayload(query) {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Overpass API request failed (${response.status}) via ${endpoint}: ${errorText.slice(0, 180)}`);
+        throw createSearchError(
+          response.status === 429 ? "rate_limit" : "upstream_unavailable",
+          `Overpass API request failed (${response.status}) via ${endpoint}: ${errorText.slice(0, 180)}`,
+          {
+            service: "overpass",
+            endpoint,
+            status: response.status
+          }
+        );
       }
 
       const payload = await response.json();
       if (!Array.isArray(payload?.elements)) {
-        throw new Error(`Overpass API returned an invalid response payload via ${endpoint}.`);
+        throw createSearchError("upstream_unavailable", `Overpass API returned an invalid response payload via ${endpoint}.`, {
+          service: "overpass",
+          endpoint
+        });
       }
 
       return payload.elements;
     } catch (error) {
-      lastError = error;
+      lastError = error?.name === "TimeoutError" || error?.name === "AbortError"
+        ? createSearchError("timeout", `Overpass API request timed out via ${endpoint}.`, {
+          service: "overpass",
+          endpoint
+        })
+        : error;
+
+      if (isImmediateFallbackError(lastError)) {
+        throw lastError;
+      }
     }
   }
 
-  throw lastError || new Error("Overpass API request failed.");
+  throw lastError || createSearchError("upstream_unavailable", "Overpass API request failed.", {
+    service: "overpass"
+  });
 }
 
 function splitIntoBatches(items, batchSize) {
@@ -543,6 +610,9 @@ async function fetchOSMStage({ coordinates, radius, specialist, selectors, keywo
       collectedResults.push(...normalizeOSMElements(elements, coordinates, stage));
     } catch (error) {
       lastError = error;
+      if (isImmediateFallbackError(error)) {
+        break;
+      }
     }
   }
 
@@ -576,6 +646,9 @@ async function fetchFromOSM({ specialist, coordinates, radius }) {
 
     if (stageResult.error) {
       lastError = stageResult.error;
+      if (isImmediateFallbackError(stageResult.error)) {
+        break;
+      }
     }
   }
 
@@ -697,6 +770,15 @@ async function findNearbyClinics({ specialist, locationText, lat, lng, radius, c
     radius: searchRadiusUsed
   });
 
+  if (osmSearch.error) {
+    logger.warn("Clinic search upstream issue detected.", {
+      specialist,
+      resolvedLocation: coordinates.resolvedLocation,
+      searchRadiusUsed,
+      error: summarizeError(osmSearch.error)
+    });
+  }
+
   if (osmSearch.results.length > 0) {
     const clinics = attachClinicContext(osmSearch.results, specialist, coordinates.resolvedLocation);
     return buildSearchResponse({
@@ -726,7 +808,7 @@ async function findNearbyClinics({ specialist, locationText, lat, lng, radius, c
         coordinates,
         searchRadiusUsed,
         clinics: fallbackClinicsList,
-        message: `Live map search had trouble responding, so I am showing ${fallbackClinicsList.length} fallback ${specialist.toLowerCase()} options.`,
+        message: `Live map search is temporarily limited, so I am showing ${fallbackClinicsList.length} fallback ${specialist.toLowerCase()} options.`,
         fallbackUsed: true,
         source: "fallback_local"
       });

@@ -1,9 +1,9 @@
 const DEFAULT_SEARCH_RADIUS_METERS = 5000;
 const BROAD_FALLBACK_RADIUS_METERS = 8000;
 const FALLBACK_LIMIT = 8;
-const SELECTOR_BATCH_SIZE = 3;
+const SELECTOR_BATCH_SIZE = 6;
 const NOMINATIM_USER_AGENT = "vital-chatbot-clinic-search/1.0";
-const OVERPASS_REQUEST_TIMEOUT_MS = 8000;
+const OVERPASS_REQUEST_TIMEOUT_MS = 3500;
 const OVERPASS_API_URLS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter"
