@@ -1,4 +1,25 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+functions/.env
+functions/.env.*
+!functions/.env.example
+
+# Dependencies
+node_modules/
+functions/node_modules/
+
+# Logs and runtime output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
 functions-emulator.out.log
 functions-emulator.err.log
 firebase-debug.log
-node_modules

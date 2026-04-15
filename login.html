@@ -29,6 +29,9 @@
             <p>Sign in to your patient dashboard</p>
 
             <form id="loginForm">
+                <div id="server-error">Invalid credentials.</div>
+                <div id="server-success">Registration successful. Please sign in.</div>
+
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" required placeholder="you@example.com">
@@ -60,6 +63,12 @@
         onAuthStateChanged(auth, (user) => {
             if (user) window.location.href = "dashboard.html";
         });
+
+        // Show success message if redirected from register
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('registered')) {
+            document.getElementById('server-success').style.display = 'block';
+        }
     </script>
 </body>
 </html>

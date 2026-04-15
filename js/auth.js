@@ -60,7 +60,10 @@ async function loginUser(email, password) {
     await signInWithEmailAndPassword(auth, email, password);
     window.location.href = "dashboard.html";
   } catch (err) {
-    // Do not show a login banner here.
+    const errDiv = document.getElementById("server-error");
+    if (errDiv) {
+      showInlineMessage("server-error", "Invalid email or password. Please try again.");
+    }
   }
 }
 
