@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book Care - Vital Chat Health</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/app-pages.css">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 </head>
 <body>
@@ -25,12 +25,104 @@
         </div>
     </header>
 
-    <div style="padding: 10rem 5% 4rem;">
-        <h1>Book Care</h1>
-        <p>Select a hospital or clinic below to book your appointment.</p>
-        <div id="booking-context" style="display:none; margin-top:1rem;"></div>
-        <div id="hospital-grid" class="hospital-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:2rem; margin-top:2rem;"></div>
-    </div>
+    <main class="page-shell booking-page booking-shell">
+        <section class="booking-hero">
+            <div class="booking-hero-grid">
+                <div class="booking-hero-copy">
+                    <span class="page-kicker"><i class='bx bx-calendar-check'></i> Scheduling Experience</span>
+                    <h1>Book care with a clearer, guided appointment flow</h1>
+                    <p>Review your selected clinic, check live slot availability, and confirm your booking with a cleaner healthcare scheduling experience.</p>
+                    <div class="assistant-chip-row" style="margin-top:18px;">
+                        <span class="chip"><i class='bx bx-link-alt'></i> Clinic selection preserved</span>
+                        <span class="chip chip--secondary"><i class='bx bx-timer'></i> Live slot availability</span>
+                    </div>
+                </div>
+                <aside class="booking-side-card">
+                    <h3>What happens next</h3>
+                    <div class="assistant-help-list">
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-hospital'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Review clinic</strong>
+                                <p>Confirm the selected provider and consultation context.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-time-five'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Choose a slot</strong>
+                                <p>Load available times for your preferred date.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-check-shield'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Confirm booking</strong>
+                                <p>Complete the appointment request and keep the flow intact.</p>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <section class="booking-layout">
+            <div class="booking-main">
+                <section class="booking-context-card">
+                    <div class="booking-section-header">
+                        <div>
+                            <h2>Selected Clinic</h2>
+                            <p>Booking context from your chatbot or clinic search flow.</p>
+                        </div>
+                    </div>
+                    <div id="booking-context" style="display:none;"></div>
+                </section>
+
+                <section class="booking-results-card">
+                    <div class="booking-section-header">
+                        <div>
+                            <h2>Available Clinics</h2>
+                            <p>Choose the clinic you want to continue booking with.</p>
+                        </div>
+                    </div>
+                    <div id="hospital-grid" class="booking-results-grid"></div>
+                </section>
+            </div>
+
+            <aside class="booking-sidebar">
+                <section class="booking-side-card">
+                    <h3>Scheduling Checklist</h3>
+                    <div class="assistant-help-list">
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-check-circle'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Clinic selected</strong>
+                                <p>Use the highlighted clinic or switch to another recommended option.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-calendar-event'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Date and slot</strong>
+                                <p>Available times load only for the date you choose.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-file'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Reason for visit</strong>
+                                <p>Add a short symptom note to help the clinic prepare.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <section class="booking-side-card">
+                    <h3>Booking Support</h3>
+                    <p>If you came from the assistant, the matched specialist and clinic context will continue through the booking flow automatically.</p>
+                </section>
+            </aside>
+        </section>
+    </main>
 
     <script type="module" src="js/firebase.js"></script>
     <script type="module" src="js/auth.js"></script>

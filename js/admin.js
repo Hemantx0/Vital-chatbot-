@@ -18,20 +18,13 @@ function showToast(message, type = 'info') {
   if (existing) existing.remove();
 
   const toast = document.createElement('div');
-  toast.className = 'admin-toast';
+  toast.className = `admin-toast page-toast page-toast--${type === 'success' ? 'success' : type === 'error' ? 'error' : 'info'}`;
   toast.textContent = message;
-  toast.style.cssText = `
-    position:fixed; bottom:2rem; right:2rem; z-index:9999;
-    padding:0.75rem 1.5rem; border-radius:8px; font-weight:600;
-    background:${type === 'success' ? '#16a34a' : type === 'error' ? '#ef4444' : '#2563eb'};
-    color:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.2);
-    opacity:0; transition:opacity 0.3s;
-  `;
   document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.style.opacity = '1');
+  requestAnimationFrame(() => toast.classList.add('visible'));
   setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 400);
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 240);
   }, 2500);
 }
 
@@ -53,31 +46,25 @@ function isPermissionError(error) {
 function renderAppointmentActions(appointmentId, status) {
   if (status === "pending") {
     return `
-      <button onclick="updateStatus('${appointmentId}','confirmed')"
-        style="padding:4px 10px; background:#16a34a; color:#fff; border:none;
-        border-radius:6px; cursor:pointer; font-size:0.8rem;">Confirm</button>
-      <button onclick="updateStatus('${appointmentId}','rejected')"
-        style="padding:4px 10px; background:#dc2626; color:#fff; border:none;
-        border-radius:6px; cursor:pointer; font-size:0.8rem;">Reject</button>
-      <button onclick="updateStatus('${appointmentId}','cancelled')"
-        style="padding:4px 10px; background:#ef4444; color:#fff; border:none;
-        border-radius:6px; cursor:pointer; font-size:0.8rem;">Cancel</button>
+      <div class="admin-actions">
+        <button class="btn-secondary" onclick="updateStatus('${appointmentId}','confirmed')">Confirm</button>
+        <button class="btn-danger" onclick="updateStatus('${appointmentId}','rejected')">Reject</button>
+        <button class="btn-outline" onclick="updateStatus('${appointmentId}','cancelled')">Cancel</button>
+      </div>
     `;
   }
 
   if (status === "confirmed") {
     return `
-      <button onclick="updateStatus('${appointmentId}','completed')"
-        style="padding:4px 10px; background:#2563eb; color:#fff; border:none;
-        border-radius:6px; cursor:pointer; font-size:0.8rem;">Complete</button>
-      <button onclick="updateStatus('${appointmentId}','cancelled')"
-        style="padding:4px 10px; background:#ef4444; color:#fff; border:none;
-        border-radius:6px; cursor:pointer; font-size:0.8rem;">Cancel</button>
+      <div class="admin-actions">
+        <button class="btn-primary" onclick="updateStatus('${appointmentId}','completed')">Complete</button>
+        <button class="btn-outline" onclick="updateStatus('${appointmentId}','cancelled')">Cancel</button>
+      </div>
     `;
   }
 
   return `
-    <span style="color:#94a3b8; font-size:0.82rem; font-weight:600;">
+    <span class="admin-muted-note" style="font-weight:600;">
       Finalized
     </span>
   `;
@@ -89,19 +76,27 @@ async function updateStats() {
 
   let pending = 0;
   let confirmed = 0;
+  let completed = 0;
+  let closed = 0;
   appointmentSnap.forEach((docSnap) => {
     const appointment = docSnap.data();
     if (appointment.status === "pending") pending++;
     if (appointment.status === "confirmed") confirmed++;
+    if (appointment.status === "completed") completed++;
+    if (appointment.status === "cancelled" || appointment.status === "rejected") closed++;
   });
 
   const statPending = document.getElementById("stat-pending");
   const statConfirmed = document.getElementById("stat-confirmed");
+  const statCompleted = document.getElementById("stat-completed");
+  const statClosed = document.getElementById("stat-closed");
   const statTotal = document.getElementById("stat-total");
   const statChats = document.getElementById("stat-chats");
 
   if (statPending) statPending.textContent = pending;
   if (statConfirmed) statConfirmed.textContent = confirmed;
+  if (statCompleted) statCompleted.textContent = completed;
+  if (statClosed) statClosed.textContent = closed;
   if (statTotal) statTotal.textContent = appointmentSnap.size;
   if (statChats) statChats.textContent = chatSnap.size;
 }
@@ -131,7 +126,7 @@ async function loadAllAppointments() {
   const statusFilter = document.getElementById("appointment-status-filter");
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">Loading appointments...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">Loading appointments...</td></tr>';
 
   try {
     const q = query(collection(db, "appointments"), orderBy("createdAt", "desc"));
@@ -139,7 +134,7 @@ async function loadAllAppointments() {
 
     tbody.innerHTML = "";
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No appointments yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No appointments yet.</td></tr>';
       return;
     }
 
@@ -151,7 +146,7 @@ async function loadAllAppointments() {
       }
       const statusMeta = getAppointmentStatusMeta(appointmentStatus);
       const clinicName = getAppointmentClinicName(a);
-      const specialty = a.specialty ? `<div style="margin-top:0.35rem; color:#2563eb; font-size:0.8rem;">${escapeHtml(a.specialty)}</div>` : "";
+      const specialty = a.specialty ? `<div class="admin-specialty-note">${escapeHtml(a.specialty)}</div>` : "";
       const createdAt = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString() : "";
       tbody.innerHTML += `
         <tr>
@@ -160,35 +155,39 @@ async function loadAllAppointments() {
           <td>${escapeHtml(clinicName)}${specialty}</td>
           <td>
             ${escapeHtml(getAppointmentDateTimeLabel(a))}
-            ${createdAt ? `<div style="margin-top:0.35rem; color:#94a3b8; font-size:0.78rem;">Booked ${escapeHtml(createdAt)}</div>` : ""}
+            ${createdAt ? `<div class="admin-muted-note">Booked ${escapeHtml(createdAt)}</div>` : ""}
           </td>
           <td>
-            <span style="background:${statusMeta.color}22; color:${statusMeta.color};
-              padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
+          <span class="${statusMeta.className}">
               ${escapeHtml(statusMeta.label)}
             </span>
           </td>
-          <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <td>
             ${renderAppointmentActions(d.id, appointmentStatus)}
           </td>
         </tr>`;
     });
 
     if (!tbody.innerHTML.trim()) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No appointments match this status.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No appointments match this status.</td></tr>';
     }
   } catch (err) {
     if (isPermissionError(err)) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="color:#ef4444; line-height:1.6;">
+          <td colspan="6" class="admin-empty-state" style="color:#ef4444; line-height:1.6;">
             Appointment data is blocked by Firestore rules for this account.
             Allow admin read access to the <strong>appointments</strong> collection in Firebase to review bookings here.
           </td>
         </tr>`;
       return;
     }
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#ef4444;">Error: ${escapeHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="admin-empty-state" style="color:#ef4444;">
+          Could not load appointments right now. Please refresh and try again.
+        </td>
+      </tr>`;
   }
 }
 
@@ -196,7 +195,7 @@ async function loadChatLogs() {
   const tbody = document.getElementById("chatlogs-tbody");
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">Loading chat logs...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">Loading chat logs...</td></tr>';
 
   try {
     const q = query(collection(db, "chat_logs"), orderBy("timestamp", "desc"));
@@ -204,14 +203,16 @@ async function loadChatLogs() {
 
     tbody.innerHTML = "";
     if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;">No chat logs yet.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No chat logs yet.</td></tr>';
       return;
     }
 
     snap.forEach(d => {
       const log = d.data();
       const reviewStatus = log.reviewStatus || "new";
-      const reviewColor = reviewStatus === "reviewed" ? "#16a34a" : "#2563eb";
+      const reviewClass = reviewStatus === "reviewed"
+        ? "status-badge status-badge--success"
+        : "status-badge status-badge--info";
       tbody.innerHTML += `
         <tr>
           <td>${escapeHtml(log.userId || 'anonymous')}</td>
@@ -219,21 +220,25 @@ async function loadChatLogs() {
           <td style="max-width:220px;">${escapeHtml(log.symptomInput || '-')}</td>
           <td style="max-width:260px;">${escapeHtml(log.botResponse || '-')}</td>
           <td>
-            <span style="background:${reviewColor}22; color:${reviewColor};
-              padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:600;">
+            <span class="${reviewClass}">
               ${escapeHtml(reviewStatus)}
             </span>
-            <div style="margin-top:0.35rem; color:#94a3b8; font-size:0.8rem;">${escapeHtml(formatTimestamp(log.timestamp))}</div>
+            <div class="admin-muted-note">${escapeHtml(formatTimestamp(log.timestamp))}</div>
           </td>
           <td>
-            <button onclick="markChatReviewed('${d.id}')"
-              style="padding:4px 10px; background:#2563eb; color:#fff; border:none;
-              border-radius:6px; cursor:pointer; font-size:0.8rem;">Mark Reviewed</button>
+            <div class="admin-actions">
+              <button class="btn-primary" onclick="markChatReviewed('${d.id}')">Mark Reviewed</button>
+            </div>
           </td>
         </tr>`;
     });
   } catch (err) {
-    tbody.innerHTML = `<tr><td colspan="6" style="color:#ef4444;">Error: ${escapeHtml(err.message)}</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="admin-empty-state" style="color:#ef4444;">
+          Chat logs could not be loaded right now. Please refresh and try again.
+        </td>
+      </tr>`;
   }
 }
 

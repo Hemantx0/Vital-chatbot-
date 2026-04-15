@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vital Chat Assistant | Full Screen AI Assistant</title>
-    <script type="module" src="js/firebase.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/app-pages.css">
     <link rel="stylesheet" href="css/chatbot-demo.css">
 </head>
 <body class="chatbot-demo-page">
@@ -21,60 +20,44 @@
             <a href="appointment.html">Book Care</a>
             <a href="chatbot.html" class="active">AI Assistant</a>
         </nav>
-        <div class="nav-actions">
+        <div class="nav-actions" id="home-nav-actions">
             <a href="login.html" class="btn-outline">Sign In</a>
             <a href="register.html" class="btn-primary">Register</a>
         </div>
     </header>
 
-    <main class="assistant-showcase">
-        <section class="assistant-hero">
-            <div class="assistant-copy">
-                <h1>Meet your <span class="highlight">Vital Chat Assistant</span></h1>
-                <p>
-                    Your chatbot now has a dedicated full-screen experience with
-                    a stronger visual flow, animated highlights, and quick-start prompts for symptom search,
-                    specialist lookup, and location-based recommendations.
-                </p>
+    <main class="assistant-showcase assistant-shell">
+        <section class="assistant-page-hero">
+            <div class="assistant-page-hero-grid">
+                <div class="assistant-page-hero-copy">
+                    <span class="page-kicker"><i class='bx bx-bot'></i> AI Health Assistant</span>
+                    <h1>Guided symptom support that leads directly to care</h1>
+                    <p>
+                        Describe symptoms, review urgency guidance, and move naturally into nearby clinic booking from one polished assistant experience.
+                    </p>
+                    <div class="assistant-steps">
+                        <div class="step-card active">
+                            <span>1</span>
+                            <strong>Describe symptoms</strong>
+                        </div>
+                        <div class="step-card">
+                            <span>2</span>
+                            <strong>Share location</strong>
+                        </div>
+                        <div class="step-card">
+                            <span>3</span>
+                            <strong>Book nearby care</strong>
+                        </div>
+                    </div>
 
-                <div class="assistant-steps">
-                    <div class="step-card active">
-                        <span>1</span>
-                        <strong>Describe symptoms</strong>
-                    </div>
-                    <div class="step-card">
-                        <span>2</span>
-                        <strong>Share location</strong>
-                    </div>
-                    <div class="step-card">
-                        <span>3</span>
-                        <strong>Book nearby care</strong>
+                    <div class="assistant-actions">
+                        <a href="#assistant-workspace" class="btn-primary">Start Conversation</a>
+                        <a href="appointment.html" class="btn-outline">Open Booking</a>
                     </div>
                 </div>
 
-                <div class="assistant-actions">
-                    <a href="#assistant-panel" class="btn-primary">Open Assistant</a>
-                    <a href="index.html" class="ghost-link">Back to Home</a>
-                </div>
-
-                <div class="assistant-stats">
-                    <div class="stat-card">
-                        <span class="value">3-Step</span>
-                        <span class="label">Guided flow</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="value">Live</span>
-                        <span class="label">Location support</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="value">Shared</span>
-                        <span class="label">Clinic data</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="assistant-visual">
-                <div class="visual-shell">
+                <div class="assistant-visual">
+                    <div class="visual-shell">
                     <div class="ambient-ring ring-one"></div>
                     <div class="ambient-ring ring-two"></div>
                     <div class="signal-card signal-primary">
@@ -100,45 +83,47 @@
             </div>
         </section>
 
-        <section class="assistant-main" id="assistant-panel">
-            <aside class="assistant-sidebar">
-                <div class="sidebar-card">
-                    <h3>Quick Prompts</h3>
-                    <p>Tap any chip to fill the chatbot instantly.</p>
-                    <div class="prompt-chips">
-                        <button type="button" class="prompt-chip" data-prompt="hi">Say hello</button>
-                        <button type="button" class="prompt-chip" data-prompt="I need a dentist">Need a dentist</button>
-                        <button type="button" class="prompt-chip" data-prompt="skin rash and itching">Skin rash</button>
-                        <button type="button" class="prompt-chip" data-prompt="stomach pain and nausea">Stomach pain</button>
-                        <button type="button" class="prompt-chip" data-prompt="cardiologist">Cardiologist</button>
-                        <button type="button" class="prompt-chip" data-prompt="Jagatpura">Jagatpura</button>
-                    </div>
-                </div>
-
-                <div class="sidebar-card">
-                    <h3>What this page offers</h3>
-                    <ul class="demo-points">
-                        <li>Greeting detection without wrong disease guessing</li>
-                        <li>Symptom-to-specialty mapping with safer matching</li>
-                        <li>Nearby clinic suggestions using real location support</li>
-                        <li>Appointment handoff into the booking page</li>
-                    </ul>
-                </div>
-            </aside>
-
-            <section class="assistant-chat-stage">
-                <div class="stage-header">
+        <section class="assistant-page-grid" id="assistant-workspace">
+            <section class="assistant-chat-panel">
+                <div class="assistant-panel-header assistant-panel-header--chat">
                     <div>
-                        <span class="stage-kicker">AI ASSISTANT</span>
+                        <span class="stage-kicker">Live Conversation</span>
                         <h2>Your AI Health Assistant</h2>
+                        <p>Share symptoms in natural language and follow the guided care steps.</p>
                     </div>
-                    <div class="stage-status">
-                        <span class="status-dot live"></span>
-                        <span>Ready to assist</span>
+                    <div class="assistant-chip-row">
+                        <span class="chip"><i class='bx bx-message-rounded-dots'></i> Structured replies</span>
+                        <span class="chip chip--secondary"><i class='bx bx-map-pin'></i> Location handoff</span>
                     </div>
                 </div>
 
-                <div class="chat-stage-shell">
+                <div class="assistant-live-summary">
+                    <div class="summary-block summary-block--hero">
+                        <h4>Conversation Summary</h4>
+                        <div id="summary-symptoms" class="summary-placeholder">Your latest symptom summary will appear here.</div>
+                    </div>
+
+                    <div class="assistant-live-summary-grid">
+                        <div class="summary-block summary-block--compact">
+                            <h4>Urgency</h4>
+                            <div id="summary-urgency" class="assistant-chip-row">
+                                <span class="chip chip--neutral">Awaiting symptom details</span>
+                            </div>
+                        </div>
+
+                        <div class="summary-block summary-block--compact">
+                            <h4>Recommended Specialist</h4>
+                            <div id="summary-specialist" class="summary-placeholder">We'll suggest the most relevant specialist after symptom analysis.</div>
+                        </div>
+                    </div>
+
+                    <div class="summary-block">
+                        <h4>Next Steps</h4>
+                        <div id="summary-next-steps" class="summary-placeholder">Guidance and follow-up steps will be listed here as the conversation progresses.</div>
+                    </div>
+                </div>
+
+                <div class="assistant-chat-shell">
                     <div class="chatbot-window chatbot-window-demo active" id="chatbot-window">
                         <div class="chatbot-header demo-chatbot-header">
                             <div class="header-info">
@@ -161,11 +146,53 @@
                     </div>
                 </div>
             </section>
+
+            <aside class="assistant-summary-panel">
+                <div class="summary-block">
+                    <h4>Quick Prompts</h4>
+                    <div class="prompt-chips">
+                        <button type="button" class="prompt-chip" data-prompt="hi">Say hello</button>
+                        <button type="button" class="prompt-chip" data-prompt="I need a dentist">Need a dentist</button>
+                        <button type="button" class="prompt-chip" data-prompt="skin rash and itching">Skin rash</button>
+                        <button type="button" class="prompt-chip" data-prompt="stomach pain and nausea">Stomach pain</button>
+                        <button type="button" class="prompt-chip" data-prompt="cardiologist">Cardiologist</button>
+                        <button type="button" class="prompt-chip" data-prompt="Jagatpura">Jagatpura</button>
+                    </div>
+                </div>
+
+                <div class="summary-block">
+                    <h4>How It Helps</h4>
+                    <div class="assistant-help-list">
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-pulse'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Safer guidance</strong>
+                                <p>Structured symptom review and urgency-aware follow-up.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-current-location'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Location handoff</strong>
+                                <p>Move directly into nearby clinic discovery once a specialist is identified.</p>
+                            </div>
+                        </div>
+                        <div class="assistant-help-item">
+                            <div class="assistant-help-icon"><i class='bx bx-calendar-check'></i></div>
+                            <div class="assistant-help-copy">
+                                <strong>Booking continuity</strong>
+                                <p>Selected clinic details carry into the appointment page without changing your flow.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </section>
     </main>
 
     <script src="js/main.js"></script>
     <script src="js/chatbot-demo.js"></script>
     <script type="module" src="js/chatbot.js"></script>
+    <script type="module" src="js/home-auth.js"></script>
 </body>
 </html>

@@ -5,12 +5,17 @@ import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { auth, db, functions } from "./firebase.js";
 import { requestNearbyClinics } from "./clinic-search-api.js";
 import { normalizeClinic, saveSelectedClinic } from "./clinic-utils.js";
+import { escapeHtml } from "./ui-utils.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     const sendBtn = document.getElementById('chat-send-btn');
     const inputField = document.getElementById('chat-input-field');
     const messagesContainer = document.getElementById('chatbot-messages');
     const chatAssistant = httpsCallable(functions, 'chatAssistant');
+    const summarySymptoms = document.getElementById('summary-symptoms');
+    const summaryUrgency = document.getElementById('summary-urgency');
+    const summarySpecialist = document.getElementById('summary-specialist');
+    const summaryNextSteps = document.getElementById('summary-next-steps');
 
     const symptomMap = [
         { keywords: ['fever', 'cold', 'cough', 'flu', 'headache', 'body ache', 'fatigue', 'weakness', 'nausea', 'vomit'], specialty: 'General Physician' },
@@ -32,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastSymptoms = '';
     let lastSpecialty = '';
     let lastClinicSearchPayload = null;
+    let hasRequestedLocation = false;
     const chatSessionId = `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const initialAssistantMessage = "Hello! I am your Vital Chat medical assistant. Please describe your symptoms or tell me what kind of specialist you're looking for!";
     const conversationHistory = [
@@ -69,6 +75,73 @@ document.addEventListener('DOMContentLoaded', () => {
         messagesContainer.appendChild(msgDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         return msgDiv;
+    }
+
+    function setSummaryValue(element, html) {
+        if (!element) return;
+        element.innerHTML = html;
+    }
+
+    function getUrgencyBadge(result) {
+        const urgency = (result?.urgencyLevel || result?.urgency || '').toLowerCase();
+        if (urgency === 'emergency') return '<span class="status-badge status-badge--danger">Emergency</span>';
+        if (urgency === 'high') return '<span class="status-badge status-badge--danger">High</span>';
+        if (urgency === 'medium') return '<span class="status-badge status-badge--pending">Medium</span>';
+        if (urgency === 'low') return '<span class="status-badge status-badge--success">Low</span>';
+        return '<span class="chip chip--neutral">Awaiting analysis</span>';
+    }
+
+    function updateSummaryPanel(result = {}, options = {}) {
+        const { reset = false } = options;
+
+        if (reset) {
+            setSummaryValue(summarySymptoms, 'Your latest symptom summary will appear here.');
+            setSummaryValue(summaryUrgency, '<span class="chip chip--neutral">Awaiting symptom details</span>');
+            setSummaryValue(summarySpecialist, 'We’ll suggest the most relevant specialist after symptom analysis.');
+            setSummaryValue(summaryNextSteps, 'Guidance and follow-up steps will be listed here as the conversation progresses.');
+            return;
+        }
+
+        if (result.symptomSummary || result.structuredSymptomSummary) {
+            setSummaryValue(summarySymptoms, `<div class="summary-hero-value">${escapeHtml(result.structuredSymptomSummary || result.symptomSummary)}</div>`);
+        }
+
+        setSummaryValue(summaryUrgency, getUrgencyBadge(result));
+
+        if (result.recommendedSpecialist || result.specialty) {
+            setSummaryValue(summarySpecialist, `<div class="summary-hero-value">${escapeHtml(result.recommendedSpecialist || result.specialty)}</div>`);
+        }
+
+        if (Array.isArray(result.nextSteps) && result.nextSteps.length > 0) {
+            setSummaryValue(summaryNextSteps, `<div class="summary-list">${result.nextSteps.map((step) => `<div class="summary-list-item">${escapeHtml(step)}</div>`).join('')}</div>`);
+        } else if (result.followUpQuestion) {
+            setSummaryValue(summaryNextSteps, `<div class="summary-list"><div class="summary-list-item">${escapeHtml(result.followUpQuestion)}</div></div>`);
+        }
+    }
+
+    function getRecommendedSpecialty(result) {
+        return result?.recommendedSpecialist || result?.specialty || '';
+    }
+
+    function isClinicSearchReady(result) {
+        const specialist = getRecommendedSpecialty(result);
+        const urgency = result?.urgencyLevel || result?.urgency || '';
+
+        return Boolean(
+            specialist &&
+            !result?.emergency &&
+            (
+                result?.needsLocation ||
+                urgency ||
+                result?.structuredSymptomSummary ||
+                result?.symptomSummary
+            )
+        );
+    }
+
+    function appendAssistantAlert(message, type = 'info') {
+        const alertCard = appendBotCard(`<div class="assistant-alert assistant-alert--${type}">${message}</div>`);
+        alertCard.style.maxWidth = '92%';
     }
 
     function appendMessage(text, sender, options = {}) {
@@ -260,6 +333,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeof distanceKm === 'number' ? `${distanceKm.toFixed(1)} km` : 'Distance unavailable';
     }
 
+    function getClinicSourceLabel(clinic) {
+        if (clinic?.source === 'openstreetmap') return 'Nearby clinic';
+        if (clinic?.source === 'fallback_local') return 'Fallback clinic';
+        return clinic?.source || 'Recommended clinic';
+    }
+
+    function getClinicSourceChipClass(clinic) {
+        if (clinic?.source === 'openstreetmap') return 'chip chip--info';
+        if (clinic?.source === 'fallback_local') return 'chip chip--neutral';
+        return 'chip';
+    }
+
     function buildBookingUrl() {
         return 'appointment.html';
     }
@@ -283,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const bookingClinic = prepareClinicForBooking(clinic);
             const isOpen = bookingClinic?.openNow === true;
             const statusLabel = isOpen ? 'Open' : 'Check timings';
-            const statusColor = isOpen ? '#16a34a' : '#64748b';
+            const statusClass = isOpen ? 'status-badge status-badge--success' : 'status-badge status-badge--neutral';
             const distanceLabel = formatDistanceLabel(bookingClinic?.distanceKm);
             const card = document.createElement('div');
             card.style.cssText = `
@@ -300,11 +385,13 @@ document.addEventListener('DOMContentLoaded', () => {
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
                     <h4 style="margin:0; color: var(--primary-dark); font-size:0.95rem;">${bookingClinic.name}</h4>
-                    <span style="background:${statusColor}; color:#fff; padding:1px 8px; border-radius:20px; font-size:0.7rem; font-weight:600; white-space:nowrap;">${statusLabel}</span>
+                    <span class="${statusClass}" style="white-space:nowrap;">${statusLabel}</span>
                 </div>
-                <p style="font-size:0.78rem; color: var(--text-secondary); margin:0.15rem 0;">
-                    <i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${bookingClinic.rating || 'N/A'} &bull; ${distanceLabel}
-                </p>
+                <div class="meta-chips" style="margin:0.2rem 0 0.75rem;">
+                    <span class="${getClinicSourceChipClass(bookingClinic)}">${getClinicSourceLabel(bookingClinic)}</span>
+                    <span class="chip chip--neutral"><i class='bx bxs-star' style="color:#facc15; font-size:0.8rem;"></i> ${bookingClinic.rating || 'N/A'}</span>
+                    <span class="chip chip--secondary">${distanceLabel}</span>
+                </div>
                 <p style="font-size:0.76rem; color: var(--text-muted); margin:0.15rem 0;">
                     <i class='bx bx-map' style="color:var(--primary); font-size:0.8rem;"></i> ${bookingClinic.address}
                 </p>
@@ -379,7 +466,9 @@ document.addEventListener('DOMContentLoaded', () => {
         lastSymptoms = '';
         lastSpecialty = '';
         lastClinicSearchPayload = null;
+        hasRequestedLocation = false;
         conversationHistory.length = 0;
+        updateSummaryPanel({}, { reset: true });
         appendMessage("Sure! Please describe your new symptoms and I'll find the best care for you.", 'bot');
     };
 
@@ -416,8 +505,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showLocationPrompt() {
+        if (hasRequestedLocation || !lastSpecialty) {
+            return;
+        }
+
+        hasRequestedLocation = true;
         const specialtyText = lastSpecialty ? ` for a ${lastSpecialty}` : '';
-        appendMessage(`Let me find the nearest top-rated clinics${specialtyText}. Share your live location or type your area, such as Jagatpura or Malviya Nagar.`, 'bot');
+        appendMessage(`Please enter your location or share your area to find nearby clinics${specialtyText}. You can type an area name like Jagatpura or Malviya Nagar.`, 'bot');
 
         const btnId = 'loc-btn-' + Date.now();
         appendBotCard(`
@@ -446,27 +540,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const assistantResult = await getAssistantAnalysis(text);
-        if (assistantResult && assistantResult.reply) {
+        const hasStructuredAssistantResult =
+            Boolean(assistantResult) &&
+            Boolean(
+                assistantResult.reply ||
+                assistantResult.recommendedSpecialist ||
+                assistantResult.specialty ||
+                assistantResult.structuredSymptomSummary ||
+                assistantResult.symptomSummary
+            );
+
+        if (hasStructuredAssistantResult) {
             lastSymptoms = assistantResult.structuredSymptomSummary || assistantResult.symptomSummary || text;
-            lastSpecialty = assistantResult.recommendedSpecialist || assistantResult.specialty || '';
+            lastSpecialty = getRecommendedSpecialty(assistantResult);
+            hasRequestedLocation = false;
 
             const structuredMessages = buildStructuredAssistantMessages(assistantResult);
             structuredMessages.forEach((message) => appendMessage(message, 'bot'));
+            updateSummaryPanel(assistantResult);
 
             let combinedBotResponse = structuredMessages.join(' ');
             if (assistantResult.followUpQuestion) {
-                appendMessage(assistantResult.followUpQuestion, 'bot');
+                appendAssistantAlert(escapeHtml(assistantResult.followUpQuestion), 'info');
                 combinedBotResponse += ` ${assistantResult.followUpQuestion}`;
             }
 
             if (assistantResult.emergency) {
-                appendMessage("If the condition feels severe, sudden, or is getting worse, please go to the nearest emergency facility immediately.", 'bot');
+                appendAssistantAlert("If the condition feels severe, sudden, or is getting worse, please go to the nearest emergency facility immediately.", 'danger');
                 combinedBotResponse += " Emergency warning shown.";
             }
 
             logChatToFirebase(text, combinedBotResponse, lastSpecialty || 'Unclear', assistantResult);
 
-            if (lastSpecialty && assistantResult.needsLocation && !assistantResult.needsMoreInfo && !assistantResult.emergency) {
+            const shouldRequestLocation = isClinicSearchReady(assistantResult);
+
+            if (shouldRequestLocation) {
                 setTimeout(() => {
                     showLocationPrompt();
                 }, 600);
@@ -488,6 +596,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         lastSymptoms = text;
         lastSpecialty = match.specialty;
+        hasRequestedLocation = false;
+        updateSummaryPanel({
+            symptomSummary: text,
+            urgency: 'medium',
+            specialty: match.specialty,
+            nextSteps: [`Arrange a consultation with a ${match.specialty}.`, 'Share your location to see nearby care options.']
+        });
 
         const isDirectSearch = looksLikeSpecialtySearch(normalized) || containsKeyword(normalized, match.specialty.toLowerCase());
         const botReply = isDirectSearch
@@ -514,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const loadingDiv = document.createElement('div');
         loadingDiv.id = loadingId;
         loadingDiv.className = 'message bot type-indicator';
-        loadingDiv.innerHTML = '<p><i class="bx bx-loader-alt bx-spin"></i> Analyzing your symptoms...</p>';
+        loadingDiv.innerHTML = '<div class="assistant-alert assistant-alert--info"><i class="bx bx-loader-alt bx-spin"></i> Analyzing your symptoms...</div>';
         loadingDiv.style.padding = '1rem';
         loadingDiv.style.borderRadius = 'var(--radius-lg)';
         loadingDiv.style.background = 'var(--bg-surface)';
@@ -532,10 +647,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function resolveAndShowClinics(locationInput) {
         botState = 'finding_clinics';
-        const locationLabel = typeof locationInput === 'string'
-            ? locationInput
-            : (locationInput?.label || 'your current location');
-
         const specialist = lastSpecialty || 'General Physician';
         const clinicSearchPayload = buildClinicSearchPayload(locationInput, specialist);
         lastClinicSearchPayload = clinicSearchPayload;
@@ -564,7 +675,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'bot'
             );
             if (clinicSearchResult.resolvedLocation) {
-                appendMessage(`Showing results around ${clinicSearchResult.resolvedLocation}.`, 'bot');
+                appendAssistantAlert(`Showing results around ${escapeHtml(clinicSearchResult.resolvedLocation)}.`, 'info');
             }
 
             setTimeout(() => {
@@ -636,4 +747,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') handleSend();
         });
     }
+
+    updateSummaryPanel({}, { reset: true });
 });

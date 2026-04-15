@@ -11,6 +11,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { auth, db } from "./firebase.js";
 
+function showInlineMessage(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = message;
+  el.style.display = "block";
+}
+
 const protectedPages = ["dashboard.html", "appointment.html", "clinics.html", "admin.html"];
 const currentPage = window.location.pathname.split("/").pop();
 
@@ -37,13 +44,12 @@ async function registerUser(name, phone, email, password) {
   } catch (err) {
     const errDiv = document.getElementById("server-error");
     if (errDiv) {
-      errDiv.style.display = "block";
       if (err.code === "auth/email-already-in-use") {
-        errDiv.textContent = "This email is already registered.";
+        showInlineMessage("server-error", "This email is already registered.");
       } else if (err.code === "auth/weak-password") {
-        errDiv.textContent = "Password must be at least 6 characters.";
+        showInlineMessage("server-error", "Password must be at least 6 characters.");
       } else {
-        errDiv.textContent = `Registration failed: ${err.message}`;
+        showInlineMessage("server-error", "Registration could not be completed right now. Please try again.");
       }
     }
   }
@@ -56,8 +62,7 @@ async function loginUser(email, password) {
   } catch (err) {
     const errDiv = document.getElementById("server-error");
     if (errDiv) {
-      errDiv.style.display = "block";
-      errDiv.textContent = "Invalid email or password. Please try again.";
+      showInlineMessage("server-error", "Invalid email or password. Please try again.");
     }
   }
 }
