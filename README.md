@@ -13,7 +13,7 @@ It provides a seamless user experience focused on intuitive healthcare accessibi
 
 ## 🌐 Live Website
 
-- Website: [Medi-Guide.web.app](https://vitalchat-bot.netlify.app/) 
+- Website: [Medi-Guide.web.app](https://medi-guide-ai.netlify.app/) 
 - Repository: [GitHub Repository](https://github.com/Hemantx0/Vital-chatbot-)
 
 ## ✨ Highlights
